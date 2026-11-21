@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>DIH World Audio | Nine-Plugin Routing Studio v5</title>
+<title>DIH World Audio | Ten-Module Routing Studio v5</title>
 <style>
 :root{color-scheme:dark}
 *{box-sizing:border-box}
@@ -43,8 +43,8 @@ details summary{cursor:pointer;color:#edc67e}
 </style>
 </head>
 <body>
-<p><a href="dih_ducking_configurator.html">Original 42-plugin configurator (corrected)</a> · <a href="FULL_NINE_PLUGIN_ROUTING_GUIDE.pdf">Full routing guide (PDF)</a></p>
-<h1>DIH WORLD AUDIO · NINE-PLUGIN ROUTING STUDIO</h1>
+<p><a href="dih_ducking_configurator.html">Original 42-plugin configurator (corrected)</a> · <a href="FULL_TEN_MODULE_ROUTING_GUIDE.pdf">Full routing guide (PDF)</a></p>
+<h1>DIH WORLD AUDIO · TEN-MODULE ROUTING STUDIO</h1>
 <p>Planning companion · Logic Pro / AU · offline · no direct DAW control · revision 21 November 2026 (v5). Static checks never mean "Logic verified"; the Mode C panel below separates what was measured in Logic 12.2 from what is still untested.</p>
 
 <section class="geb" id="geb-guide" aria-labelledby="geb-title" data-jeb-label="GEB routing-guide identity">
@@ -156,8 +156,8 @@ details summary{cursor:pointer;color:#edc67e}
 <label>Wet send level (planning only)<select id="wetSend"><option value="user-set">Set in Logic by ear</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></label>
 </section>
 
-<section data-jeb-label="Nine plugin modules">
-<h2>All nine plugin modules</h2>
+<section data-jeb-label="Ten plugin modules">
+<h2>All ten plugin modules</h2>
 <div class="scroll"><table><thead><tr><th>Plugin / behavior</th><th>Audio target</th><th>External feed</th><th>Enable</th></tr></thead><tbody id="processors"></tbody></table></div>
 <div id="validation" role="status"></div>
 </section>
@@ -183,7 +183,7 @@ details summary{cursor:pointer;color:#edc67e}
 </section>
 
 <section>
-<h2>Help: the nine modules and what is established</h2>
+<h2>Help: the ten modules and what is established</h2>
 <div class="scroll"><table><thead><tr><th>Plugin</th><th>Behavior</th><th>Routing distinction</th><th>Status</th></tr></thead><tbody id="helptable"></tbody></table></div>
 <p class="note">Host tags cite bounded Logic 12.2 bounce tests made on 20 November. They establish only the named configuration, default/preset state, and source material; they are not an all-settings certification. The precise evidence and remaining work are in <a href="HOST_TEST_LOG.pdf">HOST_TEST_LOG.md</a>.</p>
 <details><summary>Known build notes (owner / internal, 20 Nov 2026)</summary><div id="notesbody"></div></details>
@@ -196,8 +196,8 @@ details summary{cursor:pointer;color:#edc67e}
 
 <script>
 'use strict';
-const FORMAT='DIH-nine-plugin-routing-v4';
-const OLD_FORMATS=['DIH-nine-plugin-routing-v3','DIH-nine-plugin-routing-v2','DIH-nine-plugin-routing-v1','DIH-eight-plugin-routing-v1'];
+const FORMAT='DIH-ten-module-routing-v5';
+const OLD_FORMATS=['DIH-nine-plugin-routing-v4','DIH-nine-plugin-routing-v3','DIH-nine-plugin-routing-v2','DIH-nine-plugin-routing-v1','DIH-eight-plugin-routing-v1'];
 const WORKFLOWS=['chain','anubisonly','standard','wet','delay','altcollector','capture','reference'];
 /* kind: detector = key bus, collector = No Output collector aux, target = audible program bus, return = audible wet return */
 const BUS_ROLES=[['vocal','Narration / vocal key (detector)','detector',32],['kick','Kick detector','detector',33],['music','Music target','target',12],['drums','Drum target','target',14],['bass','Bass target','target',15],['impact','Impact target','target',16],['fx','FX target','target',9],['master','Master target','target',10],['capture','Capture feed','detector',34],['reference','Reference key','detector',35],['reverb','Audible reverb return','return',36],['delay','Audible delay return','return',37],['collector','Alternate collector bus','collector',38],['altdest','Alternate destination bus','return',39]];
@@ -210,6 +210,7 @@ const PLUGINS=[
 {name:'MARIANA',purpose:'Bass foundation duck',target:'bass',source:'kick',type:'duck',on:false},
 {name:'MONOLITH',purpose:'Impact / weight duck',target:'impact',source:'kick',type:'duck',on:false},
 {name:'Drum Morpher',purpose:'METAMORPH external capture',target:'capture',source:'music',type:'capture',on:false},
+{name:'SacredVerb',purpose:'Reverb with its own keyed Reverb Duck',target:'reverb',source:'vocal',type:'reverbduck',on:false},
 {name:'LookOut',purpose:'Transient Key and/or Duck',target:'drums',source:'kick',type:'keyduck',on:false},
 {name:'SILVER',purpose:'Reference level matching',target:'master',source:'reference',type:'reference',on:false},
 {name:'NTRPL',purpose:'Rewrite-layer duck',target:'music',source:'vocal',type:'rewrite',on:false}
@@ -221,6 +222,7 @@ const HELP={
 'MARIANA':{behavior:'Bass foundation. Key (35–160 Hz band follower) ducks the generated pressure/foundation layer only.',distinct:'Do not assume the dry bass ducks.',status:[['src','source: detector band, layer-only duck'],['host','Logic 12.2 default-preset A/B/C bounce: added layer +3.35 dB; key-on vs key-off −0.51 dB mean (min −1.51 dB)'],['pend','repeat with chosen production preset, mono/stereo and listening']]},
 'MONOLITH':{behavior:'Impact / weight. Key (40–180 Hz band follower) ducks the added Stone layer.',distinct:'The audible impact target stays distinct from the key.',status:[['src','source: detector band, layer duck'],['host','Logic 12.2 default-preset A/B/C bounce: added layer +3.22 dB; key-on vs key-off −0.53 dB mean (min −1.64 dB)'],['pend','repeat with chosen production preset, mono/stereo and listening']]},
 'Drum Morpher':{behavior:'METAMORPH instrument capture.',distinct:'Not a ducker. Preserve MIDI pads independently from the MPC-sidechain capture path.',status:[['src','source: capture design and kSidechainChannels = 0'],['host','owner-confirmed: numerous MPC-sidechain tests work inside Drum Morpher (21 Nov 2026)'],['pend','archive WAV bounces and metadata only if a measured level analysis is later needed']]},
+'SacredVerb':{behavior:'Reverb with a native Reverb Duck keyed from its own Side Chain (attenuates the wet reverb only, never the dry). Sits before ANUBIS when ANUBIS ducks the wet signal (Mode C).',distinct:'SacredVerb has two separate ducks: its own Reverb Duck and ANUBIS after it; they stack. Set Reverb Duck to 0.00 when ANUBIS should be the only duck.',status:[['src','source: native duck = −24 dB × Reverb Duck/100 × clamp(key envelope × 4) on the wet signal'],['host','Logic 12.2 DIH_7P bounce (20 Nov, SacredVerb 4.0.0, wet-only vs CHAIN_0): duck −5.23 dB mean during vocal activity, −0.82 dB in gaps'],['host','Logic 12.2 Mode C (21 Nov 2026): Reverb Duck 50 alone took about −2.4 to −5.2 dB off the wet return in phrases and stacked with ANUBIS (about −22 to −24 dB together); the reverb is not sample-reproducible between renders'],['pend','Reverb Duck alone at other settings, mono/stereo, other hosts; the shipped default 50.00 is a canon decision, not changed here']]},
 'LookOut':{behavior:'Transient key and broadband duck with independent Key and Duck switches.',distinct:'Test Key only, Duck only and Key + Duck separately.',status:[['src','source read: duck follows raw instantaneous key level and acts on whole output'],['host','Logic 12.2 default bounce: Duck on vs neither −1.66 dB mean, p10 −3.98 dB, min −5.93 dB'],['pend','Key-only and Key+Duck remain separate tests; judge high Duck Amount by ear']]},
 'SILVER':{behavior:'Reference-driven level matching with a two-channel reference sidechain.',distinct:'The reference is not a ducking detector and not an audible track.',status:[['src','source: two-channel reference follower, Ref Match 0..1'],['host','Logic 12.2: verified Reference control moved output; real-reference run swung −6.50 to +12.92 dB by 0.25 s window'],['pend','choose/refine smoothing by ear; this is level following, not ducking']]},
 'NTRPL':{behavior:'Rewrite-layer duck (Interpol).',distinct:'The key attenuates the generated rewrite layer, not the whole main signal.',status:[['src','source: rewrite-layer duck and sidechain controls'],['host','Logic 12.2 default A/B/C bounce: key-on vs key-off −0.04 dB mean, min −0.52 dB; main path stayed near unity'],['pend','repeat with a production rewrite amount and listening']]}
@@ -232,7 +234,7 @@ const NOTES=[
 'ANUBIS: duck depth now rises from the Threshold control over a window above it (before, Threshold had no effect in DUCK mode). Presets and their stored values are unchanged.',
 'Native DSP was changed on 20 Nov 2026 at the owner\'s request (TEHUTI, ANUBIS, MARIANA, MONOLITH, DrumKrushGlue and the shared AU wrapper). This package itself contains no native code.'
 ];
-const TEST_FIELDS=[['build','Plugin build / version','text'],['logic','Logic version','text'],['sc','AU sidechain input exposed and responding','sel:unknown,yes,no'],['bypass','Level: processor bypassed','text'],['active','Level: key active','text'],['gap','Level: key gap','text'],['bounce','Offline bounce matches playback','sel:unknown,yes,no'],['recall','Recall after save / reopen','sel:unknown,pass,fail'],['monostereo','Mono and stereo checked','sel:unknown,yes,no'],['collsend','Collector send delivers from a No Output aux','sel:unknown,yes,no'],['pre','Pre-fader collector send behavior','text'],['post','Post-fader collector send behavior','text']];
+const TEST_FIELDS=[['plugin','Plugin under test','sel:(not set),ANUBIS,TEHUTI,DrumKrushGlue,MARIANA,MONOLITH,Drum Morpher,LookOut,SILVER,NTRPL'],['build','Plugin build / version','text'],['au','AU version / format','text'],['logic','Logic version','text'],['rate','Sample rate / buffer','text'],['input','Input signal and detector material','text'],['sc','AU sidechain input exposed and responding','sel:unknown,yes,no'],['detmeter','Detector meter reading','text'],['outmeter','Output meter reading','text'],['bypass','Level: processor bypassed','text'],['active','Level: key active','text'],['gap','Level: key gap','text'],['bounce','Offline bounce matches playback','sel:unknown,yes,no'],['recall','Recall after save / reopen','sel:unknown,pass,fail'],['monostereo','Mono and stereo checked','sel:unknown,yes,no'],['collsend','Collector send delivers from a No Output aux','sel:unknown,yes,no'],['pre','Pre-fader collector send behavior','text'],['post','Post-fader collector send behavior','text'],['outcome','Outcome (measured, one line; never inferred from this page)','text']];
 
 const esc=x=>String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function defaultAlt(){return {source:'Track 1 (vocal / narration)',sourceOut:'mix',srcLevel:'unity',srcMode:'post',collOut:'noout',collFader:'unity',effect:'reverb',effectName:'',sendOn:'yes',retLevel:'unity',retMode:'postpan',retOut:'mix',detPlugin:'none',detSource:'detector'}}
@@ -262,7 +264,7 @@ function validate(c){
   if(p.source===p.target)errors.push(p.name+': same source and target (feedback risk)');
   if(p.source!=='none'&&c.buses[p.source]===c.buses[p.target])errors.push(p.name+': key and target use the same bus');
   if(['reverb','delay'].includes(p.source))errors.push(p.name+': an audible return cannot be its own detector');
-  if(['reverb','delay'].includes(p.target)&&!['duck','spectral','keyduck','rewrite'].includes(p.type))warnings.push(p.name+': placed on a wet return but is not a conventional wet ducker');
+  if(['reverb','delay'].includes(p.target)&&!['duck','spectral','keyduck','rewrite','reverbduck'].includes(p.type))warnings.push(p.name+': placed on a wet return but is not a conventional wet ducker');
   if(p.type==='capture'&&p.target!=='capture')warnings.push('Drum Morpher: target is not a capture destination');
   if(p.type==='reference'&&p.source!=='reference')warnings.push('SILVER: reference track is not selected');}
  if(c.workflow==='chain'){const A=c.plugins.find(p=>p.name==='ANUBIS'),T=c.plugins.find(p=>p.name==='TEHUTI');
@@ -316,6 +318,7 @@ function stepsFor(p,c){const b=c.buses,wet=['reverb','delay'].includes(p.target)
  else if(p.name==='ANUBIS')a.push('ANUBIS: for the coordinated chain pick preset TEHUTI DUCK GUARD [Stereo] (source values: threshold -38 dB, ratio 3:1, attack 2 ms, hold 70 ms, release 220 ms, range -30 dB). After recall confirm Sidechain Key OFF and Sidechain Duck ON. Factory values, not a promised reduction.');
  else if(p.type==='capture')a.push('Drum Morpher is capture, not ducking: check that Logic exposes an input, then test capture, monitoring and silence detection; keep MIDI independent.');
  else if(p.type==='reference')a.push('SILVER: choose the reference bus as the external input, enable Reference and Ref Match; the reference is neither a detector nor an audible track.');
+ else if(p.type==='reverbduck')a.push('SacredVerb: set Side Chain to the detector bus and enable Sidechain Key; Reverb Duck attenuates only the wet reverb (shipped default 50.00; 0.00 when ANUBIS does the ducking, as in Mode C). Keep the audible return on a bus that reaches the mix.');
  else if(p.type==='keyduck')a.push('LookOut: test Key only, Duck only, then Key + Duck.');
  else if(p.type==='rewrite')a.push('NTRPL: enable Sidechain Key; check that only the rewrite layer is attenuated.');
  a.push('Test bypass / no key / key active / key gap, record the levels in the test record, then bounce and reopen.');
@@ -398,10 +401,10 @@ function stepsForConfig(c){const act=n=>c.plugins.some(p=>p.name===n&&p.enabled)
  return c.plugins.filter(p=>p.enabled).map(p=>({title:p.name,steps:stepsFor(p,c)}))}
 function normalizeImport(raw){const c=defaultConfig();
  if(!raw||typeof raw!=='object')throw Error('Unsupported profile');
- if(![FORMAT].concat(OLD_FORMATS).includes(raw.format)||!raw.buses||typeof raw.buses!=='object'||!Array.isArray(raw.plugins)||![8,9].includes(raw.plugins.length))throw Error('Unsupported profile');
+ if(![FORMAT].concat(OLD_FORMATS).includes(raw.format)||!raw.buses||typeof raw.buses!=='object'||!Array.isArray(raw.plugins)||![8,9,10].includes(raw.plugins.length))throw Error('Unsupported profile');
  for(const [id,,,def] of BUS_ROLES){const n=raw.buses[id]!==undefined?raw.buses[id]:(OPTIONAL_ROLES.includes(id)?def:null);if(!Number.isInteger(n)||n<1||n>256)throw Error('Invalid bus '+id);c.buses[id]=n}
  const T=new Set(BUS_ROLES.filter(r=>r[2]==='target'||r[2]==='return').map(r=>r[0]).concat(['capture','reference'])),S=new Set(['vocal','kick','music','drums','bass','impact','fx','reference','capture','none']);
- for(const p of c.plugins){const q=raw.plugins.find(x=>x&&x.name===p.name);if(!q){if(p.name==='NTRPL'){p.enabled=false;continue}throw Error('Missing '+p.name)}
+ for(const p of c.plugins){const q=raw.plugins.find(x=>x&&x.name===p.name);if(!q){if(p.name==='NTRPL'||p.name==='SacredVerb'){p.enabled=false;continue}throw Error('Missing '+p.name)}
   if(q.type!==p.type||!T.has(q.target)||!S.has(q.source)||typeof q.enabled!=='boolean')throw Error('Invalid module '+p.name);p.target=q.target;p.source=q.source;p.enabled=q.enabled}
  c.workflow=WORKFLOWS.includes(raw.workflow)?raw.workflow:'standard';
  if(['user-set','low','medium','high'].includes(raw.wetSend))c.wetSend=raw.wetSend;
@@ -411,7 +414,7 @@ function normalizeImport(raw){const c=defaultConfig();
   if(typeof r.source==='string'&&r.source.length<80)A.source=r.source;if(typeof r.effectName==='string'&&r.effectName.length<80)A.effectName=r.effectName}
  if(raw.testRecord&&typeof raw.testRecord==='object'){for(const [k] of TEST_FIELDS)if(typeof raw.testRecord[k]==='string'&&raw.testRecord[k].length<200)c.testRecord[k]=raw.testRecord[k];if(typeof raw.testRecord.notes==='string'&&raw.testRecord.notes.length<400)c.testRecord.notes=raw.testRecord.notes}
  return c}
-function exportText(c){const L=['DIH WORLD AUDIO — NINE PLUGIN ROUTING (v4) — STATIC PLAN, NOT LOGIC VERIFIED','Workflow: '+c.workflow,'A No Output detector or collector aux works only if the plugin / separate send still receives the signal in Logic; audible targets and returns MUST output to the mix.'];
+function exportText(c){const L=['DIH WORLD AUDIO — TEN MODULE ROUTING (v5) — STATIC PLAN, NOT LOGIC VERIFIED','Workflow: '+c.workflow,'A No Output detector or collector aux works only if the plugin / separate send still receives the signal in Logic; audible targets and returns MUST output to the mix.'];
  for(const g of stepsForConfig(c))L.push('\n'+g.title+'\n'+g.steps.map((x,i)=>(i+1)+'. '+x).join('\n'));
  if(c.workflow==='altcollector')L.push('\nMODE C MEASURED IN LOGIC PRO 12.2 (21 NOV 2026, ANUBIS route; see CLAUDE_MODEC_FULL_TESTS_20261121.md)','- Return off: bounce equals the dry source bit-exactly; return carries no dry signal.','- No Output collector delivers through Send 2; destination aux audible.','- Send 2 default is Post Pan and follows the collector fader; Pre Fader ignores it.','- ANUBIS (Side Chain = dry source, Duck ON, Range -19.8 dB): about -19.8 to -20.3 dB duck on the wet return, full depth within about 20 ms, recovery to about 0 dB in gaps of 0.5 s or more.','- Detector independent of Send 2 level, return mute and source main output; settings persist after reopen; realtime matches offline within 0.5 dB.','- SacredVerb Reverb Duck: set 0.00 (shipped default 50.00; default change pending next canon build).','- Not yet tested in Mode C: TEHUTI, LookOut, SILVER, mono, other effects, other Logic versions.');
  L.push('\nTEST CHECKLIST');for(const [t,k] of checklistFor(c))L.push('- '+t+' ['+k+']');
@@ -463,8 +466,8 @@ function render(){const c=getConfig(),r=validate(c);let h='';
  $('verification').innerHTML=verification(c).map(x=>'<li>'+esc(x)+'</li>').join('')+'<li><strong>Checklist for this workflow:</strong><ul>'+checklistFor(c).map(([t,k])=>'<li>'+esc(t)+' <small>['+esc(k)+']</small></li>').join('')+'</ul></li>';
  return {c,r}}
 function download(name,content,mime){const url=URL.createObjectURL(new Blob([content],{type:mime})),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)}
-$('json').onclick=()=>{const {c,r}=render();if(!r.errors.length)download('DIH_Nine_Plugin_Routing_v5.json',JSON.stringify(c,null,2),'application/json')};
-$('txt').onclick=()=>{const {c,r}=render();if(!r.errors.length)download('DIH_Nine_Plugin_Logic_Routing_v5.txt',exportText(c),'text/plain')};
+$('json').onclick=()=>{const {c,r}=render();if(!r.errors.length)download('DIH_Ten_Module_Routing_v5.json',JSON.stringify(c,null,2),'application/json')};
+$('txt').onclick=()=>{const {c,r}=render();if(!r.errors.length)download('DIH_Ten_Module_Logic_Routing_v5.txt',exportText(c),'text/plain')};
 $('print').onclick=()=>window.print();
 $('import').onchange=async e=>{try{const f=e.target.files[0];if(!f||f.size>100000)throw Error('Invalid file');setConfig(normalizeImport(JSON.parse(await f.text())));render()}catch(ex){$('validation').innerHTML='<p class="bad">Import rejected: '+esc(ex.message)+'</p>'}finally{e.target.value=''}};
 $('workflow').addEventListener('change',()=>{const c=getConfig();applyWorkflow(c,$('workflow').value);setConfig(c);render()});
