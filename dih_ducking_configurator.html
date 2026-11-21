@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DIH Ducking Chain Configurator</title>
+<style>
+:root{
+  --bg:#0b0b0d; --panel:#14151a; --panel2:#1a1c22; --line:#3a3326; --gold:#e0b45a; --gold2:#b88a34;
+  --text:#ece6d8; --mute:#9a9484; --key:#b983ff; --audio:#e0b45a; --ok:#6fcf97; --warn:#f2c94c; --bad:#eb5757; --cyan:#5fd3e0;
+}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(1200px 500px at 50% -100px,#2a2113 0,transparent 70%),var(--bg);color:var(--text);font:14px/1.45 -apple-system,"Segoe UI",Helvetica,Arial,sans-serif}
+header{text-align:center;padding:28px 16px 10px}
+.brand{letter-spacing:.28em;color:var(--gold);font-size:12px}
+h1{font-family:Georgia,"Times New Roman",serif;font-weight:600;color:var(--gold);font-size:clamp(28px,5vw,46px);margin:6px 0}
+header p{margin:0 auto;max-width:760px;color:var(--mute)}
+.bar{display:flex;gap:8px;justify-content:center;align-items:center;margin:14px 0 0;flex-wrap:wrap;font-size:12px;color:var(--mute)}
+main{max-width:1320px;margin:0 auto;padding:16px;display:grid;grid-template-columns:320px 1fr 320px;gap:16px}
+@media(max-width:1100px){main{grid-template-columns:1fr}}
+.card{background:linear-gradient(180deg,var(--panel),#101116);border:1px solid var(--line);border-radius:12px;padding:14px;position:relative}
+.card h2{margin:0 0 10px;font-size:15px;color:var(--gold);font-weight:600;letter-spacing:.02em}
+.card h3{margin:14px 0 6px;font-size:12px;color:var(--gold);text-transform:uppercase;letter-spacing:.1em}
+label{display:block;font-size:12px;color:var(--mute);margin:10px 0 3px}
+select,button{width:100%;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:9px 10px;font:inherit}
+select:focus,button:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
+button{cursor:pointer}
+button.primary{background:linear-gradient(180deg,#f0c872,#b88a34);color:#1a1205;font-weight:700;border:0;margin-top:14px}
+button.primary:hover{filter:brightness(1.08)}
+button.ghost:hover{border-color:var(--gold)}
+.tabs{display:inline-flex;gap:4px;float:right}
+.tabs button{width:auto;padding:4px 10px;font-size:12px;border-radius:999px}
+.tabs button.on{background:var(--gold);color:#1a1205;border-color:var(--gold)}
+svg{width:100%;height:auto;display:block;background:#0e0f13;border:1px solid #23252d;border-radius:10px}
+.node rect{fill:#15161c;stroke-width:1.6}
+.node text{fill:var(--text);font-size:13px;font-weight:600;text-anchor:middle}
+.node .sub{fill:var(--mute);font-size:10.5px;font-weight:400}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--mute);margin-top:8px}
+.legend i{display:inline-block;width:26px;height:0;border-top:2px solid;vertical-align:middle;margin-right:6px}
+.proc{border:1px solid var(--gold2);border-radius:10px;padding:10px;margin-bottom:8px;background:#17140d}
+.proc.sec{border-color:#3a3326;background:#121216}
+.proc b{color:var(--gold);font-size:16px}
+.proc small{color:var(--mute);display:block}
+.proc ul{margin:6px 0 0;padding-left:16px;color:var(--mute);font-size:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:5px}
+.grid div{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:5px 3px;text-align:center;font-size:11px;color:var(--mute)}
+.grid div b{display:block;color:var(--text);font-size:12px}
+.note{font-size:11.5px;color:var(--mute);margin-top:8px}
+.checks li,.steps li{margin:4px 0}
+.checks{list-style:none;padding:0;margin:0}
+.chk-ok::before{content:"✔ ";color:var(--ok)} .chk-warn::before{content:"▲ ";color:var(--warn)} .chk-bad::before{content:"✖ ";color:var(--bad)}
+.steps{padding-left:18px;margin:0;font-size:13px}
+.templates{max-width:1320px;margin:0 auto;padding:0 16px 8px}
+.tgrid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+@media(max-width:1100px){.tgrid{grid-template-columns:repeat(2,1fr)}}
+.t{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px;text-align:left;font-size:12px;color:var(--mute)}
+.t b{display:block;color:var(--gold);font-size:13px;margin-bottom:4px}
+.t.free{border-color:var(--gold)}
+.t .lock{float:right}
+.t:hover{border-color:var(--gold)}
+.t .chain{display:block;color:var(--text);margin:4px 0;font-size:11px}
+.tips{max-width:1320px;margin:0 auto;padding:8px 16px 24px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:1100px){.tips{grid-template-columns:1fr}}
+.paywall{position:absolute;inset:0;border-radius:12px;background:rgba(8,8,10,.86);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;text-align:center;padding:20px;z-index:5}
+.locked .paywall{display:flex}
+.paywall div{max-width:300px}
+#config.locked select,#config.locked button{pointer-events:none;opacity:.45}
+.paywall b{color:var(--gold);font-size:16px}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--gold);color:#1a1205;padding:8px 16px;border-radius:999px;font-weight:600;opacity:0;transition:.25s;pointer-events:none}
+.toast.show{opacity:1}
+footer{text-align:center;color:var(--mute);font-size:11.5px;padding:0 16px 30px;max-width:900px;margin:0 auto}
+@media print{
+  body{background:#fff;color:#000} .card,.t{background:#fff;border-color:#999} header .bar,.templates,.tips,button,.tabs,.paywall,footer{display:none!important}
+  main{display:block} svg{background:#fff} .node text{fill:#000} .node rect{fill:#fff} h1,.card h2,.card h3,.proc b{color:#000}
+}
+
+/* ---- mockup restyle ---- */
+:root{--line:#6b5428;--gold:#f0c872;--panel:#15120c;--panel2:#1d1810}
+body{background:
+ linear-gradient(180deg,rgba(0,0,0,.25),rgba(0,0,0,.85) 420px),
+ radial-gradient(900px 260px at 50% 0,#6b4a16 0,transparent 70%),#07070a}
+.nav{display:flex;align-items:center;gap:22px;padding:10px 24px;border-bottom:1px solid #3a2e16;background:rgba(8,7,5,.9);flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:10px;color:var(--gold);font-family:Georgia,serif;letter-spacing:.14em;font-size:18px}
+.logo svg{width:34px;height:30px;background:none;border:0;border-radius:0;flex:none}
+.logo{white-space:nowrap}
+.logo small{display:block;font:9px/1 sans-serif;letter-spacing:.3em;color:var(--mute);margin-top:3px}
+.nav a{color:var(--text);text-decoration:none;font-size:13px;opacity:.85}
+.nav a:hover,.nav a:focus-visible{opacity:1;color:var(--gold);outline:2px solid var(--gold);outline-offset:3px;border-radius:3px}
+.nav-target{display:block;height:0;position:relative;top:-12px;visibility:hidden}
+.nav .sp{flex:1}
+.nav .srch{border:1px solid var(--line);border-radius:999px;padding:6px 14px;color:var(--mute);font-size:12px;min-width:200px}
+.hero{position:relative;overflow:hidden;padding:26px 16px 12px;text-align:center}
+.hero::before,.hero::after{content:"";position:absolute;bottom:0;width:340px;height:130px;opacity:.38;
+ background:linear-gradient(135deg,transparent 49%,#c8903a 50%) ;clip-path:polygon(0 100%,45% 8%,100% 100%)}
+.hero::before,.hero::after{display:none}
+.hero .art{position:absolute;bottom:0;z-index:0;opacity:.9;pointer-events:none}
+.hero .artL{left:0;height:100%;max-height:250px;-webkit-mask-image:linear-gradient(90deg,#000 55%,transparent);mask-image:linear-gradient(90deg,#000 55%,transparent)}
+.hero .artR{right:0;height:100%;max-height:250px;-webkit-mask-image:linear-gradient(270deg,#000 55%,transparent);mask-image:linear-gradient(270deg,#000 55%,transparent)}
+@media(max-width:900px){.hero .art{display:none}}
+.hero p{text-shadow:0 1px 6px #000,0 0 14px #000}
+.hero .artR{opacity:.7}
+.logo img{height:44px;display:block}
+.shot{width:100%;height:150px;object-fit:cover;border-radius:8px;border:1px solid #4a3d1e;margin-bottom:8px;display:block}
+.badge{display:inline-block;font-size:10.5px;border:1px solid var(--warn);color:var(--warn);border-radius:999px;padding:1px 8px;margin:2px 4px 0 0}
+.badge.ok{border-color:var(--ok);color:var(--ok)}
+.hero>*{position:relative;z-index:1}
+h1{text-shadow:0 0 24px rgba(240,200,114,.35);letter-spacing:.02em}
+.card{border:1px solid #7a5f2a;background:linear-gradient(180deg,#17130b,#0d0c0a);box-shadow:0 0 0 1px #000 inset,0 0 18px rgba(184,138,52,.12)}
+.card h2{display:flex;align-items:center;gap:8px;font-size:17px}
+.card h2::before{content:"";width:22px;height:22px;flex:none;border:1.5px solid var(--gold);border-radius:6px;
+ background:radial-gradient(circle,var(--gold) 0 2.5px,transparent 3px)}
+.node rect{filter:drop-shadow(0 0 6px currentColor);fill:#120f08}
+svg{background:radial-gradient(500px 200px at 50% 40%,#1a1409,#0a0908)}
+.proc{background:linear-gradient(135deg,#2a1f0c,#120f08);box-shadow:0 0 14px rgba(240,200,114,.18)}
+.proc b{font-size:20px;letter-spacing:.08em}
+.grid div{background:#14110a}
+.t{background:linear-gradient(180deg,#1a150b,#0e0c08);border-color:#6b5428}
+.mtabs{display:inline-flex;gap:4px;float:right;border:1px solid var(--line);border-radius:999px;padding:3px}
+.mtabs button{width:auto;border:0;background:transparent;border-radius:999px;padding:4px 12px;font-size:12px;color:var(--mute)}
+.mtabs button.on{background:linear-gradient(180deg,#f0c872,#b88a34);color:#1a1205;font-weight:700}
+.pane{display:none}.pane.on{display:block}
+
+/* DIH dual-chain extension */
+.dual-panel{max-width:1288px;margin:0 auto 16px;padding:18px;background:#17191f;border:1px solid #5d4b30;border-radius:12px;color:#eee}
+.dual-panel h2{color:#e0b45a;margin:0 0 8px}.dual-controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:12px 0}.dual-controls label{font-size:12px;color:#c5bdaf;display:block}.dual-controls input,.dual-controls select{width:100%;padding:9px;background:#252933;color:white;border:1px solid #666;border-radius:6px;margin-top:4px;box-sizing:border-box}.dual-actions{display:flex;gap:8px;flex-wrap:wrap}.dual-actions button{width:auto;padding:10px 13px}.dual-map{overflow:auto;border:1px solid #494846;border-radius:8px;padding:12px;background:#101318;margin:12px 0}.dual-map svg{width:100%;min-width:650px;max-height:290px}.dual-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}.dual-grid article{border:1px solid #494846;border-radius:8px;padding:12px;background:#20242a}.dual-grid h3{color:#e0b45a;margin:0 0 7px}.dual-grid li{margin:5px 0}.dual-warning{border-left:3px solid #e0b45a;padding:9px;background:#30291c;margin:10px 0}#dualStatus{margin:8px 0;color:#dfd0a9}
+@media print{.dual-actions{display:none}.dual-panel{color:#111;background:#fff}.dual-grid article{background:#fff;color:#111}.dual-panel h2,.dual-grid h3{color:#333}}
+</style>
+</head>
+<body>
+<div style="padding:12px;background:#1c2934;border:1px solid #ad8b4b;text-align:center"><a style="color:#f1d18c;font-weight:bold" href="dih_nine_plugin_router.html">OPEN UNIFIED NINE-PLUGIN SIDECHAIN ROUTING STUDIO</a></div>
+<div class="nav"><div class="logo"><div>DIH WORLD AUDIO<small>PRODUCTION · MIXING · SOUND DESIGN</small><small style="color:var(--warn);letter-spacing:.1em">Placeholder wordmark: canonical logo pending owner</small></div></div>
+<a href="#home">Home</a><a href="#tools">Tools</a><a href="#plugins">Plugins</a><a href="dih_nine_plugin_router.html">Routing</a><a href="FULL_NINE_PLUGIN_ROUTING_GUIDE.md">Guides</a><a href="#templates">Templates</a><a href="#support">Support</a><span class="sp"></span><span class="srch">Search DIH World Audio…</span></div>
+<header class="hero" id="home"><img class="art artL" src="assets/hero_pharaoh.png" alt=""><img class="art artR" src="assets/hero_pyramids.png" alt="">
+  <h1>Configure Ducking Chain</h1>
+  <p style="font-size:16px;color:var(--text)">Build intelligent sidechain routing for tracks, buses, and effects returns.</p>
+  <p>Pick a trigger and a target. The tool recommends a processor, draws the audible path and the detector-only key path separately, and flags routing mistakes.</p>
+  <div class="bar">View as:
+    <span class="tabs" style="float:none"><button id="viewPaid" class="on">Subscriber</button><button id="viewFree">Public</button></span>
+  </div>
+</header>
+
+<main id="app">
+  <span class="nav-target" id="tools" aria-hidden="true"></span>
+  <section class="card" id="config">
+    <h2>Configure Routing</h2>
+    <label for="src">Trigger source</label><select id="src"></select>
+    <label for="tgt">Signal to duck</label><select id="tgt"></select>
+    <label for="goal">Processing goal</label><select id="goal"></select>
+    <label for="daw">DAW</label><select id="daw"></select>
+    <label for="mode">DAW routing mode</label><select id="mode"></select>
+    <label for="p1">Primary processor</label><select id="p1"></select>
+    <label for="p2">Secondary processor</label><select id="p2"></select>
+    <button class="primary" id="gen">Generate Routing Plan</button>
+    <button class="ghost" id="copy" style="margin-top:8px">Copy Routing Settings</button>
+    <button class="ghost" id="save" style="margin-top:8px">Save to this browser</button>
+    <button class="ghost" id="print" style="margin-top:8px">Print / Save PDF</button>
+    <div class="note">Saving is local to this browser only. Account sync is a website feature and is not implemented here. The tool does not control any DAW.</div>
+  </section>
+
+  <section class="card" id="mapCard">
+    <h2>Ducking Chain Routing Map<span class="mtabs"><button data-p="pr" class="on">Routing View</button><button data-p="ps">Signal Flow</button><button data-p="pd">Details</button></span></h2>
+    <div id="map"></div>
+    <div class="legend">
+      <span><i style="border-color:var(--audio)"></i>Audible program</span>
+      <span><i style="border-color:var(--key);border-top-style:dashed"></i>Detector only (key)</span>
+      <span>Key audio never enters the target output.</span>
+    </div>
+    <div class="pane on" id="pr"><h3>Validation</h3><ul class="checks" id="checks"></ul></div>
+    <div class="pane" id="ps"><h3>Setup steps</h3><ol class="steps" id="steps"></ol></div>
+    <div class="pane" id="pd"><h3>Details</h3><div class="note" id="details"></div></div>
+  </section>
+
+  <span class="nav-target" id="plugins" aria-hidden="true"></span>
+  <section class="card" id="recCard">
+    <h2>Recommended Processor</h2>
+    <div id="rec"></div>
+    <h3>Suggested starting settings</h3>
+    <div class="grid" id="settings"></div>
+    <div class="note" id="settingsNote"></div>
+    <h3>Listening goal (measured reduction, not a control value)</h3>
+    <div id="reduction"></div>
+    <div class="paywall"><div><b>Unlock Interactive Routing Guides</b><p>The public tier shows one example chain: Kick vs Bass with TEHUTI. Subscribers get the full builder, templates, starting settings, export and saved presets.</p></div></div>
+  </section>
+</main>
+
+<section class="templates card" id="templates" style="margin:0 auto 16px;max-width:1288px">
+  <h2>Routing Templates</h2>
+  <div class="tgrid" id="tpls"></div>
+</section>
+
+<section class="tips" id="guides">
+  <div class="card"><h2>Logic Pro routing tips</h2><div class="note" style="margin:0">Keep the source audible. Create a separate detector send; its auxiliary may be No Output ONLY if Logic still supplies the external key. For wet reverb/delay ducking, create another send to an audible 100%-wet effects return, insert the ducking processor after the effect, and route the return to the mix. Never set an audible return to No Output. Confirm each path by listening and metering.</div></div>
+  <div class="card"><h2>Track / bus / return best practices</h2><div class="note" style="margin:0">Label key buses (Kick Key, Vocal Key, Narration Key). Effect returns are wet-only. Never route a return into its own key. Every audible group and return feeds the mix once.</div></div>
+  <div class="card"><h2>Save as website feature</h2><div class="note" style="margin:0">Planned: save routing setups to a DIH World Audio account for recall in later sessions. Here: local browser storage only.</div></div>
+</section>
+<section style="border:2px solid #edc67e;padding:14px;margin:14px 0"><strong>REQUIRED WET-RETURN ROUTING:</strong> A detector-only Bus with No Output does not create audible reverb. Use a second send to a separate audible effects-return bus, reverb/delay at 100% wet, ducking insert after it, return output to Stereo Out/mix. Verify wet audio before enabling the ducker. This legacy page is a planning guide; use the nine-plugin studio for explicit bus assignments.</section><footer id="support">Bus numbers and listening goals are examples, not factory settings or measured results. Logo, hero art and the map icons are provisional pending owner approval; plugin windows are the owner's original screenshots, cropped with CSS only. Verify native sidechain behavior, control names and ranges in the current build before publication. This is not a DSP specification.</footer>
+<div class="toast" id="toast"></div>
+
+
+<section class="dual-panel" id="dualStudio">
+<h2>ANUBIS + TEHUTI · Dual Ducking Studio</h2>
+<p>Logic Pro routing worksheet · Existing ANUBIS path preserved · Proposed TEHUTI addition (native response must be verified)</p>
+<div class="dual-controls">
+<label>Vocal / detector key bus<input id="dualKey" type="number" min="1" max="256" value="32"></label>
+<label>Music / target bus<input id="dualMusic" type="number" min="1" max="256" value="12"></label>
+<label>TEHUTI target bus<input id="dualTehuti" type="number" min="1" max="256" value="13"></label>
+<label>FX collector bus<input id="dualFx" type="number" min="1" max="256" value="9"></label>
+<label>Master bus<input id="dualMaster" type="number" min="1" max="256" value="10"></label>
+<label>Arrangement<select id="dualMode"><option value="separate">Separate targets (recommended first)</option><option value="serial">Serial on music bus</option><option value="parallel">Parallel music paths (advanced)</option></select></label>
+<label>TEHUTI spectral focus<select id="dualBand"><option value="MID">MID · vocal space</option><option value="HIGH">HIGH · presence only if needed</option><option value="LOW">LOW · low-frequency masking</option></select></label>
+</div>
+<div class="dual-actions"><button id="dualLoad" type="button">Load confirmed Bus 32 example</button><button id="dualExport" type="button">Export JSON</button><button id="dualImport" type="button">Import JSON</button><button id="dualText" type="button">Download routing guide</button><button id="dualPrint" type="button">Print guide</button><input id="dualImportFile" type="file" accept="application/json,.json" hidden></div>
+<div id="dualStatus" role="status" aria-live="polite"></div><div class="dual-map" id="dualDiagram"></div><div class="dual-grid"><article><h3>ANUBIS · broadband</h3><ul id="dualAnubis"></ul></article><article><h3>TEHUTI · spectral</h3><ul id="dualTehutiSteps"></ul></article><article><h3>Validation & safety</h3><ul id="dualChecks"></ul></article><article><h3>A/B comparison worksheet</h3><ul id="dualTests"></ul></article></div>
+<p class="dual-warning">This is an offline routing planner, not an Audio Unit. It cannot read Logic meters or automate Logic routing. No preset, parameter range or measured gain reduction is claimed as verified for the native builds.</p>
+</section>
+
+<script>
+/* ---------- Data ---------- */
+const SOURCES = {
+  kick:   {name:"Kick",           key:"Kick Key",      bus:30, kind:"kick"},
+  vocal:  {name:"Lead Vocal",     key:"Vocal Key",     bus:31, kind:"voice"},
+  narr:   {name:"Narration",      key:"Narration Key", bus:32, kind:"voice"},
+  snare:  {name:"Snare / Perc",   key:"Perc Key",      bus:33, kind:"perc"},
+  sfx:    {name:"SFX / Hits",     key:"SFX Key",       bus:34, kind:"perc"}
+};
+const TARGETS = {
+  bass:   {name:"Bass Bus",       type:"dry",    out:"Mix"},
+  orch:   {name:"Orchestra Bus",  type:"dry",    out:"Mix"},
+  keys:   {name:"Keys Bus",       type:"dry",    out:"Mix"},
+  music:  {name:"Music Bus",      type:"dry",    out:"Mix"},
+  reverb: {name:"Reverb Return",  type:"wet",    out:"Mix"},
+  delay:  {name:"Delay Return",   type:"wet",    out:"Mix"},
+  amb:    {name:"Ambience Return",type:"wet",    out:"Mix"}
+};
+const GOALS = {
+  duck:    "Ducking (Make Space)",
+  spectral:"Spectral separation",
+  wet:     "Wet-return duck",
+  gate:    "External gate (trigger opens)",
+  layer:   "Layer-only duck (generated layer)"
+};
+const DAWS = {logic:"Logic Pro", other:"Other host (AU / VST3)"};
+const MODES = {t2b:"Track-to-Bus", t2r:"Track-to-Return", b2b:"Bus-to-Bus", multi:"Multi-source (hybrid)"};
+const PROCS = {
+  ANUBIS:   {role:"Broadband ducking / external gate", scope:"full",     verified:true,
+             cap:"Sidechain: owner-confirmed",shot:"ANUBIS.png",pos:"50% 18%",
+             bullets:["Controls shown in the plugin: DUCK, KEY, RANGE, THRESHOLD, RATIO, ATTACK, HOLD, RELEASE, LISTEN, MIX","Native source: Sidechain Duck ON with Sidechain Key OFF = external duck only; Sidechain Key drives external gate detection (confirmed in source; ANUBIS-only duck also observed in Logic, 20 Nov 2026)","Attack, Hold and Release are milliseconds (source); the plugin face shows no unit. Release is a one-pole time constant, so full recovery takes several times the set value"]},
+  TEHUTI:   {role:"Spectral ducking (Low / Mid / High)", scope:"band", verified:true,
+             cap:"Sidechain + spectral ducking: owner-confirmed",shot:"TEHUTI.png",pos:"50% 30%",
+             bullets:["Controls shown: LOW, MID, HIGH, DEPTH, SPEED, MIX, HPF/LPF, host Side Chain","No Attack, Hold or Release controls","Crossovers are 161.8 Hz and 1618 Hz (PHI x 100, PHI x 1000), confirmed in source","Kick → Low first; voice → Mid, then High (Atlas guidance)"]},
+  MARIANA:  {role:"Sub foundation (generated layer only)", scope:"layer", verified:false,cap:"Sidechain behavior: unverified",shot:"MARIANA.png",pos:"50% 30%",
+             bullets:["Key ducks the added sub layer only","Original bass is outside the duck multiplier","Detector ≈ 35–160 Hz (Atlas)","Native key behavior must be verified first"]},
+  MONOLITH: {role:"Stone / weight layer", scope:"layer", verified:false,cap:"Sidechain behavior: unverified",shot:"MONOLITH.png",pos:"50% 30%",
+             bullets:["Key moves the added weight aside","Original impact is protected","Detector ≈ 40–180 Hz (Atlas)","Native key behavior must be verified first"]},
+  NTRPL:    {role:"Rewrite layer", scope:"layer", verified:false,cap:"Sidechain behavior: unverified",shot:"NTRPL.png",pos:"50% 30%",
+             bullets:["Generated harmonic layer yields to the key","Retained source is not attenuated","Detector ≈ 35–160 Hz (Atlas)","Native key behavior must be verified first"]},
+  SACREDVERB:{role:"Wet-only reverb duck", scope:"wet",    verified:false,cap:"Sidechain behavior: unverified",shot:"SacredVerb.png",pos:"50% 30%",
+             bullets:["Native wet-layer ducking per existing visual guide","Use wet-only output on an aux","Not in the six-processor matrix; confirm current build","Native Side Chain availability to be verified"]},
+  "None":   {role:"None", scope:"none", verified:true, bullets:[]}
+};
+
+const ALLOWED42=["AEGIS_NOVA","ANKH","ANUBIS","APIS","ARCHAEOLOGIST_X","AU","AUSAR","AUSET","Ballpark","Cathedral","DeBo","DEPTH_BOOST_PRO","Depth_Impact_Hybrid_X","Drum_Morpher","DrumKrushGlue","EchoLocate","GOLD","Horizon_X","IMHOTEP","Khepri_Sacred_Tape_Machine","LookOut","MAAT","MARIANA","MONOLITH","NSR","NTRPL","NTRSTLLR","OTIS","PARALLAX","PLATINUM","PTAHTUBE","SacredVerb","SERQET","SESHAT","SILVER","SlotMachine","SOVEREIGN","SPHYNX","TEHUTI","Thoth","TRIPLER","WPR"];
+const idOf=n=>n==="SACREDVERB"?"SacredVerb":n;
+Object.keys(PROCS).filter(n=>n!=="None").forEach(n=>{ if(!ALLOWED42.includes(idOf(n))) throw new Error("Processor outside the 42 whitelist: "+n); });
+/* ---------- State & helpers ---------- */
+const $ = id => document.getElementById(id);
+const toast = m => { const t=$("toast"); t.textContent=m; t.classList.add("show"); clearTimeout(toast.h); toast.h=setTimeout(()=>t.classList.remove("show"),1800); };
+function fill(sel, obj, val){ const el=$(sel); el.innerHTML=""; for(const k in obj){ const o=document.createElement("option"); o.value=k; o.textContent=typeof obj[k]==="string"?obj[k]:obj[k].name; el.appendChild(o);} if(val) el.value=val; }
+let free=false, redTarget="mid";
+
+fill("src",SOURCES,"kick"); fill("tgt",TARGETS,"bass"); fill("goal",GOALS,"spectral");
+fill("daw",DAWS,"logic"); fill("mode",MODES,"t2b");
+{ const names={}; ["ANUBIS","TEHUTI","MARIANA","MONOLITH","NTRPL","SACREDVERB"].forEach(n=>names[n]=n);
+  fill("p1",names,"TEHUTI"); const n2=Object.assign({None:"None"},names); fill("p2",n2,"None"); }
+
+/* ---------- Recommendation engine ---------- */
+function recommend(s){
+  const t=TARGETS[s.tgt], src=SOURCES[s.src];
+  let primary, secondary="None", why=[];
+  switch(s.goal){
+    case "duck":     primary = t.type==="wet" ? "ANUBIS" : "ANUBIS"; why.push("Broadband ducking moves the whole target out of the way."); break;
+    case "spectral": primary = "TEHUTI"; why.push("Band-selective ducking keeps the rest of the target present."); break;
+    case "wet":      primary = "ANUBIS"; secondary = "None"; why.push("Duck the wet return after the reverb/delay, wet-only."); break;
+    case "gate":     primary = "ANUBIS"; why.push("ANUBIS has a separate external-gate mode (KEY on, DUCK off)."); break;
+    case "layer":    primary = src.kind==="kick" ? "MARIANA" : "NTRPL"; secondary = src.kind==="kick" ? "MONOLITH" : "None"; why.push("Layer-specific processors duck only their added layer."); break;
+  }
+  if(s.goal==="spectral" && t.type==="wet"){ secondary="ANUBIS"; }
+  return {primary, secondary, why};
+}
+
+/* ---------- Starting targets (audition, not factory) ---------- */
+function startingSettings(s){
+  const src=SOURCES[s.src], t=TARGETS[s.tgt], p=s.p1;
+  const o={attack:"5–15 ms",hold:"20–60 ms",release:"200–450 ms",depth:"1–3 dB",speed:"Medium",low:"—",mid:"—",high:"—",thr:"Set by ear",mix:"100 %"};
+  if(p==="TEHUTI"){
+    if(src.kind==="kick"){ o.low="2–4 dB"; o.mid="0 dB"; o.high="0 dB"; o.depth="2–4 dB (Low)"; o.release="Match groove"; }
+    else if(src.kind==="voice"){ o.low="0 dB"; o.mid="1–3 dB"; o.high="0–1 dB"; o.depth="1–3 dB (Mid)"; }
+    else { o.low="0–2 dB"; o.mid="1–2 dB"; o.high="0–1 dB"; }
+  }else if(p==="ANUBIS"){
+    o.depth= t.type==="wet" ? "3–6 dB" : "2–4 dB";
+    o.low=o.mid=o.high="n/a (broadband)";
+  }else{
+    o.depth="Duck layer only"; o.low=o.mid=o.high="n/a";
+    o.attack=o.hold=o.release="Verify ranges";
+  }
+  return o;
+}
+const REDUCTION = {subtle:"1–3 dB (subtle / natural)", mid:"3–6 dB (clear / noticeable)"};
+
+
+/* Control names taken from the native ANUBIS and TEHUTI plugin windows (screenshots, Nov 2026).
+   Units and ranges are NOT shown there; values below are audition targets only. */
+function settingsPairs(s){
+  const src=SOURCES[s.src], p=s.p1, v=src.kind==="voice", k=src.kind==="kick", gate=s.goal==="gate";
+  if(p==="TEHUTI") return [
+    ["LOW", k?"Start here":"Off at first"],["MID", v?"Start here":(k?"Off":"Light")],["HIGH", v?"Only if needed":"Off"],
+    ["DEPTH","Raise gradually"],["SPEED","By ear"],["MIX","Unverified"],
+    ["Side Chain","Bus "+src.bus],["HPF / LPF","Leave default"]];
+  if(p==="ANUBIS") return [
+    ["DUCK", gate?"Off*":"On*"],["KEY", gate?"On*":"Off*"],["RANGE","By ear"],["THRESHOLD","By ear"],["RATIO","By ear"],
+    ["ATTACK","ms (source); by ear"],["HOLD","ms (source); by ear"],["RELEASE","ms (source); by ear"],["Side Chain","Bus "+src.bus],["LISTEN","Check the key"]];
+  return [["KEY","Unverified"],["Side Chain","Bus "+src.bus],["Duck amount","By ear"],["Recovery","By ear"]];
+}
+/* ---------- Validation ---------- */
+function validate(s, rec){
+  const out=[], src=SOURCES[s.src], t=TARGETS[s.tgt];
+  const ok=(m)=>out.push(["ok",m]), warn=(m)=>out.push(["warn",m]), bad=(m)=>out.push(["bad",m]);
+  const procs=[s.p1,s.p2].filter(p=>p&&p!=="None");
+  if(s.p1===s.p2 && s.p1!=="None") warn("Primary and secondary are the same processor.");
+  if(s.src===s.tgt) bad("Trigger and target are the same signal (feedback).");
+  warn("Key Bus "+src.bus+" may use No Output ONLY if the current Logic AU still receives the detector. Verify by meter and key/no-key test.");
+  ok("Dry "+src.name+" keeps its normal audible route to its own group.");
+  if(t.type==="wet") warn("Wet return requires a SECOND send to a SEPARATE audible reverb/delay auxiliary, effect at 100% wet BEFORE the ducking insert, and output to the mix. Bypass the ducker and confirm audible effect before testing ducking.");
+  if(s.mode==="t2r" && t.type!=="wet") warn("Track-to-Return mode is chosen but the target is a bus, not a return.");
+  if(s.mode==="t2b" && t.type==="wet") warn("Track-to-Bus mode is chosen but the target is a wet return. Consider Track-to-Return.");
+  if(s.mode==="multi") warn("Multi-source: use one key bus per trigger and never sum a return into its own key.");
+  procs.forEach(p=>{
+    const P=PROCS[p];
+    if(!P.verified) warn(p+": native sidechain/key behavior not yet verified. Confirm in the current AU/VST3 build before publishing.");
+    if(P.scope==="layer" && s.goal!=="layer") warn(p+" ducks only its generated layer, which does not match the chosen goal.");
+    if(P.scope==="band" && s.goal==="duck") warn("TEHUTI is spectral; the goal is broadband ducking. ANUBIS may fit better.");
+    if(P.scope==="full" && s.goal==="spectral") warn("ANUBIS is broadband; the goal is spectral separation. TEHUTI may fit better.");
+  });
+  if(s.goal==="gate" && !procs.includes("ANUBIS")) bad("External gate needs ANUBIS (KEY on, DUCK off).");
+  if(s.goal==="wet" && t.type!=="wet") warn("Wet-return duck chosen but the target is not a return.");
+  if(s.goal==="layer" && !procs.some(p=>PROCS[p].scope==="layer")) bad("Layer-only goal needs MARIANA, MONOLITH or NTRPL.");
+  if(src.kind==="kick" && s.p1==="TEHUTI") ok("Kick key: select the Low band first.");
+  if(src.kind==="kick") out.push(["warn","If the kick comes from Drum Morpher, print an isolated kick or use a dedicated kick output; snare and hats must not trigger this route."]);
+  if(procs.some(p=>p==="ANUBIS"||p==="TEHUTI")) warn("ANUBIS KEY/DUCK semantics and millisecond timing units are confirmed in native source. Parameter ranges and values on the plugin face still need checking against the manual and the installed build.");warn("Choosing Side Chain: None may not disconnect a key on plugin builds made before 20 Nov 2026 (shared AU wrapper). To prove a no-key state, remove the send or bypass the plugin.");warn("On a mono track, older ANUBIS, DrumKrushGlue, MARIANA and MONOLITH builds mishandled the key (right-output leak or half strength). Check with the installed build.");
+  if(s.daw==="other") warn("Menu names and key-bus selection vary by host. Confirm sidechain support in that host and format.");
+  if(!out.some(x=>x[0]==="bad")) warn("Static routing review only: no live detector, return audibility, feedback, or plugin support has been verified.");
+  return out;
+}
+
+/* ---------- Setup steps ---------- */
+function steps(s, rec){
+  const src=SOURCES[s.src], t=TARGETS[s.tgt], list=[];
+  const p=s.p1;
+  const logic = s.daw==="logic";
+  list.push(`Route ${src.name} to its normal group so it stays audible.`);
+  list.push(logic
+    ? `Create a ${logic&&"post-fader"} send from ${src.name} to Bus ${src.bus} (${src.key}). Set the detector auxiliary to No Output only if the plugin still receives the key in Logic.`
+    : `Create a send/aux from ${src.name} for the detector. Mute its output so only the key is used.`);
+  if(t.type==="wet") list.push(`Create a SEPARATE audible send from the effect source to a dedicated ${t.name} bus (NOT Bus ${src.bus}). On its aux insert the reverb/delay at 100% wet, route the aux to the audible mix, and confirm a wet tail with the ducker bypassed.`);
+  list.push(`Insert ${p} on the ${t.name}${t.type==="wet"?" AFTER the reverb/delay, on the audible wet return":""}.`);
+  list.push(logic
+    ? `In ${p}'s Side Chain menu, select Bus ${src.bus}. ${p==="ANUBIS"?(s.goal==="gate"?"Per the Atlas, enable KEY and disable DUCK for gate mode (verify in the manual).":"Per the Atlas, turn DUCK on with KEY off for duck-only (verify in the manual)."):"Enable the key input if the plugin has one."}`
+    : `In ${p}'s sidechain input, select ${src.key}.`);
+  if(p==="TEHUTI") list.push(src.kind==="kick" ? "Choose the Low band first, then raise Depth and Speed gradually. Check per-band GR." : "Choose Mid first, add High only if needed, leave Low untouched. Check per-band GR.");
+  if(p==="ANUBIS") list.push(s.goal==="gate" ? "Set THRESHOLD so the trigger opens the gate." : "Tune RANGE, THRESHOLD and the timing controls by ear while listening to recovery between phrases. Timing units are not shown, so do not quote ms.");
+  if(PROCS[p].scope==="layer") list.push("Enable KEY and adjust the duck amount and recovery. Watch the source and layer meters.");
+  if(s.p2!=="None") list.push(`Optional second stage: ${s.p2}. Compare each alone, both active, and serial. Avoid unnecessary cumulative gain reduction.`);
+  list.push("Verify: the target is audible with the ducker bypassed; the key reaches the detector; the key aux is not audible; the wet return (if used) remains audible; the target recovers in gaps; compare at matched loudness.");
+  return list;
+}
+
+/* ---------- SVG map ---------- */
+function node(x,y,w,h,title,sub,color,icon){
+  const ic=icon?`<image href="assets/icons/icon_${icon}.svg" x="${x+10}" y="${y+h/2-12}" width="24" height="24"/>`:"";
+  return `<g class="node"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="10" stroke="${color}"/>${ic}
+  <text x="${x+w/2}" y="${y+h/2-(sub?2:-5)}">${title}</text>${sub?`<text class="sub" x="${x+w/2}" y="${y+h/2+15}">${sub}</text>`:""}</g>`;
+}
+function arrow(x1,y1,x2,y2,color,dash){
+  return `<path d="M${x1} ${y1} L${x2} ${y2}" stroke="${color}" stroke-width="2.4" fill="none" ${dash?'stroke-dasharray="7 5"':""} marker-end="url(#a-${color==='#b983ff'?'k':'a'})"/>`;
+}
+function renderMap(s){
+  const src=SOURCES[s.src], t=TARGETS[s.tgt];
+  const procs=[s.p1,s.p2].filter(p=>p&&p!=="None");
+  const W=900,H=330;
+  let g=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Routing map: ${src.name} key to ${procs.join(" and ")} on ${t.name}">
+  <defs>
+   <marker id="a-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#e0b45a"/></marker>
+   <marker id="a-k" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#b983ff"/></marker></defs>
+  <text x="20" y="26" fill="#9a9484" font-size="11" letter-spacing="2">AUDIBLE PROGRAM</text>`;
+  // audible lane
+  const y1=48, h=62;
+  g+=node(20,y1,190,h,t.name,"Main program",'#5fd3e0',t.type==="wet"?"reverb":"mixer");
+  const pw = procs.length>1 ? 150 : 210;
+  let px=300;
+  procs.forEach((p,i)=>{ g+=node(px,y1,pw,h,p,"Insert on target",'#e0b45a',"level_bars"); if(i<procs.length-1){ g+=arrow(px+pw,y1+h/2,px+pw+40,y1+h/2,'#e0b45a'); px+=pw+40;} });
+  const lastEnd = procs.length>1 ? px+pw : 300+pw;
+  g+=arrow(210,y1+h/2,300,y1+h/2,'#e0b45a');
+  const ox=700;
+  g+=arrow(lastEnd,y1+h/2,ox,y1+h/2,'#e0b45a');
+  g+=node(ox,y1,180,h,"Mix / family bus","Audible output",'#5fd3e0',"mixer");
+  // detector lane
+  g+=`<text x="20" y="216" fill="#9a9484" font-size="11" letter-spacing="2">DETECTOR ONLY</text>`;
+  const y2=232;
+  g+=node(20,y2,190,h-6,src.name,"Source / trigger",'#b983ff',src.kind==="voice"?"microphone":"kick");
+  g+=arrow(210,y2+(h-6)/2,300,y2+(h-6)/2,'#b983ff',true);
+  g+=node(300,y2,210,h-6,`Bus ${src.bus} · ${src.key}`,"Detector only · verify key",'#b983ff',"bus");
+  const kx=300+105;
+  // key feeds each processor input from below
+  g+=`<path d="M${kx} ${y2} L${kx} ${y1+h+22} L${300+pw/2} ${y1+h+22} L${300+pw/2} ${y1+h+3}" stroke="#b983ff" stroke-width="2.4" fill="none" stroke-dasharray="7 5" marker-end="url(#a-k)"/>`;
+  g+=`<text x="${kx+10}" y="${y1+h+40}" fill="#b983ff" font-size="11">Detector input</text>`;
+  if(procs.length>1){ const sx=300+pw+40+pw/2; g+=`<path d="M${300+pw/2} ${y1+h+22} L${sx} ${y1+h+22} L${sx} ${y1+h+3}" stroke="#b983ff" stroke-width="2.4" fill="none" stroke-dasharray="7 5" marker-end="url(#a-k)"/>`; }
+  g+=`<text x="560" y="${y2+20}" fill="#b983ff" font-size="12" font-weight="700">DETECTOR ONLY</text>
+      <text x="560" y="${y2+38}" fill="#9a9484" font-size="11">Key aux must be verified in Logic.</text>
+      <text x="560" y="${y2+53}" fill="#9a9484" font-size="11">${src.name} stays audible through its own group.</text>`;
+  g+="</svg>";
+  $("map").innerHTML=g;
+}
+
+/* ---------- Render ---------- */
+function state(){ return {src:$("src").value,tgt:$("tgt").value,goal:$("goal").value,daw:$("daw").value,mode:$("mode").value,p1:$("p1").value,p2:$("p2").value}; }
+function render(){
+  const s=state(), rec=recommend(s);
+  renderMap(s);
+  // recommended processors
+  const card=(p,cls)=>{ if(p==="None") return ""; const P=PROCS[p];
+    const im=P.shot?`<img class="shot" src="assets/plugins/${P.shot}" style="object-position:${P.pos}" alt="${p} plugin window (original screenshot, cropped by CSS)">`:"";
+    return `<div class="proc ${cls}">${im}<b>${p}</b><small>${P.role}</small><span class="badge ${P.verified?"ok":""}">${P.cap}</span>${P.verified?'<span class="badge">Units/ranges unverified</span>':""}<ul>${P.bullets.map(b=>`<li>${b}</li>`).join("")}</ul></div>`; };
+  $("rec").innerHTML = `<div class="note" style="margin:0 0 8px">${rec.why.join(" ")} Recommended: <b style="color:var(--gold)">${rec.primary}</b>${rec.secondary!=="None"?` + ${rec.secondary}`:""}.</div>`
+    + card(s.p1,"") + card(s.p2,"sec");
+  // settings
+  $("settings").innerHTML = settingsPairs(s).map(([k,v])=>`<div>${k}<b>${v}</b></div>`).join("");
+  $("settingsNote").textContent="Control names come from the native plugin windows. No numeric values are recommended until native units and ranges are verified and the chain is measured. *Atlas interpretation of DUCK/KEY, not yet confirmed against the manual.";
+  $("reduction").innerHTML = ["subtle","mid"].map(k=>`<label style="display:flex;gap:8px;align-items:center;margin:4px 0;font-size:12.5px;color:var(--text)"><input type="radio" name="red" value="${k}" ${redTarget===k?"checked":""}> ${REDUCTION[k]}</label>`).join("");
+  document.querySelectorAll('input[name=red]').forEach(r=>r.onchange=e=>{redTarget=e.target.value;});
+  // checks + steps
+  $("checks").innerHTML = validate(s,rec).map(([c,m])=>`<li class="chk-${c}">${m}</li>`).join("");
+  $("steps").innerHTML = steps(s,rec).map(x=>`<li>${x}</li>`).join("");
+}
+["src","tgt","goal","daw","mode","p1","p2"].forEach(id=>$(id).addEventListener("change",render));
+$("goal").addEventListener("change",()=>{ const r=recommend(state()); $("p1").value=r.primary; $("p2").value=r.secondary; render(); });
+$("src").addEventListener("change",()=>{ const r=recommend(state()); $("p1").value=r.primary; $("p2").value=r.secondary; render(); });
+$("tgt").addEventListener("change",()=>{ const r=recommend(state()); $("p1").value=r.primary; $("p2").value=r.secondary; render(); });
+$("gen").onclick=()=>{ const r=recommend(state()); $("p1").value=r.primary; $("p2").value=r.secondary; render(); toast("Routing plan generated"); };
+
+/* ---------- Plan text, copy, save, print ---------- */
+function planText(){
+  const s=state(), src=SOURCES[s.src], t=TARGETS[s.tgt];
+  return [`DIH WORLD AUDIO · Ducking routing plan`,
+   `Trigger: ${src.name} → Bus ${src.bus} (${src.key}), No Output`,
+   `Target: ${t.name} (${GOALS[s.goal]})`,
+   `Host: ${DAWS[s.daw]} · ${MODES[s.mode]}`,
+   `Processors: ${s.p1}${s.p2!=="None"?" + "+s.p2:""}`,
+   ``,`Steps:`,...steps(s).map((x,i)=>`${i+1}. ${x}`),
+   ``,`Starting targets (audition, not factory): `+settingsPairs(s).map(([k,v])=>k+" "+v).join("; "),
+   `Reduction target: ${REDUCTION[redTarget]}`,
+   ``,`Validation:`,...validate(s).map(([c,m])=>`[${c.toUpperCase()}] ${m}`),
+   ``,`Bus numbers and values are examples. Verify native sidechain behavior before publication.`].join("\n");
+}
+$("copy").onclick=async()=>{ try{ await navigator.clipboard.writeText(planText()); toast("Routing plan copied"); }catch(e){ toast("Copy blocked by browser"); } };
+$("save").onclick=()=>{ try{ localStorage.setItem("dih_routing",JSON.stringify(state())); toast("Saved in this browser"); }catch(e){ toast("Storage unavailable"); } };
+$("print").onclick=()=>window.print();
+
+/* ---------- Templates ---------- */
+const TPL = [
+ {n:"Kick vs Bass",    c:["Kick","TEHUTI","Bass"],      d:"Classic pump: duck the bass low band with the kick.", s:{src:"kick",tgt:"bass",goal:"spectral",p1:"TEHUTI",p2:"None",mode:"t2b"}, free:true},
+ {n:"Vocal vs Orchestra",c:["Vocal","TEHUTI","Orch"],   d:"Keep the lead vocal clear over the orchestra.",       s:{src:"vocal",tgt:"orch",goal:"spectral",p1:"TEHUTI",p2:"None",mode:"t2b"}},
+ {n:"Narration vs Reverb",c:["Narr","ANUBIS","Reverb"], d:"Reduce reverb during narration for clarity.",         s:{src:"narr",tgt:"reverb",goal:"wet",p1:"ANUBIS",p2:"None",mode:"t2r"}},
+ {n:"Lead Vocal vs Delay",c:["Vocal","ANUBIS","Delay"], d:"Tame the delay when the vocal is active.",            s:{src:"vocal",tgt:"delay",goal:"wet",p1:"ANUBIS",p2:"None",mode:"t2r"}},
+ {n:"Cinematic Ducking",c:["SFX","TEHUTI","Music"],     d:"Shape music around key cinematic elements.",           s:{src:"sfx",tgt:"music",goal:"spectral",p1:"TEHUTI",p2:"None",mode:"t2b"}},
+ {n:"Hybrid Bus Control",c:["Multi","ANUBIS","Bus"],    d:"Dual stage: spectral on the bus, broadband on the return.", s:{src:"narr",tgt:"orch",goal:"spectral",p1:"TEHUTI",p2:"ANUBIS",mode:"multi"}}
+];
+function renderTpls(){
+  $("tpls").innerHTML = TPL.map((t,i)=>`<button class="t ${t.free?"free":""}" data-i="${i}"><b>${t.n}${(!t.free&&free)?'<span class="lock">🔒</span>':""}</b><span class="chain">${t.c.join(" → ")}</span>${t.d}</button>`).join("");
+  document.querySelectorAll(".t").forEach(b=>b.onclick=()=>{
+    const t=TPL[+b.dataset.i];
+    if(free && !t.free){ toast("Subscriber template"); return; }
+    loadState(t.s); toast(t.n+" loaded");
+  });
+}
+function loadState(s){ for(const k in s){ $(k).value=s[k]; } render(); }
+
+/* ---------- Public / paid view ---------- */
+function setView(isFree){
+  free=isFree;
+  $("viewFree").classList.toggle("on",free); $("viewPaid").classList.toggle("on",!free);
+  ["config","recCard"].forEach(id=>$(id).classList.toggle("locked",free));
+  if(free){ loadState(TPL[0].s); }
+  renderTpls();
+}
+$("viewFree").onclick=()=>setView(true); $("viewPaid").onclick=()=>setView(false);
+
+/* ---------- Init ---------- */
+try{ const sv=JSON.parse(localStorage.getItem("dih_routing")||"null"); if(sv) for(const k in sv) if($(k)) $(k).value=sv[k]; }catch(e){}
+render(); renderTpls();
+
+document.querySelectorAll(".mtabs button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll(".mtabs button").forEach(x=>x.classList.toggle("on",x===b));
+  document.querySelectorAll(".pane").forEach(p=>p.classList.toggle("on",p.id===b.dataset.p));
+});
+const _r=render; render=function(){ _r(); const s=state(),src=SOURCES[s.src],t=TARGETS[s.tgt];
+  $("details").innerHTML=`Trigger: <b>${src.name}</b> (Bus ${src.bus}, ${src.key})<br>Target: <b>${t.name}</b> · ${t.type==="wet"?"wet return":"dry bus"}<br>Goal: ${GOALS[s.goal]}<br>Host: ${DAWS[s.daw]} · ${MODES[s.mode]}<br>Processors: ${s.p1}${s.p2!=="None"?" + "+s.p2:""}<br><br>Bus numbers are examples; use available buses in the actual session.`; };
+render();
+
+/* -------- Dual Ducking Studio v2: isolated from the original 42-plugin builder -------- */
+(function(){
+ const el=id=>document.getElementById(id);
+ const ids=['dualKey','dualMusic','dualTehuti','dualFx','dualMaster'];
+ const all=[...ids,'dualMode','dualBand'];
+ const vals=()=>Object.fromEntries(all.map(id=>[id,el(id).value]));
+ const validBus=x=>Number.isInteger(Number(x))&&Number(x)>=1&&Number(x)<=256;
+ const esc=x=>String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ function evaluate(){
+  const v=vals(), issues=[];
+  ids.forEach(id=>{if(!validBus(v[id]))issues.push('Invalid bus number: '+id)});
+  if(v.dualKey===v.dualMusic||v.dualKey===v.dualTehuti||v.dualKey===v.dualMaster||v.dualKey===v.dualFx)issues.push('Detector bus must not share a program, FX or master bus number.');
+  if(v.dualMaster===v.dualMusic||v.dualMaster===v.dualTehuti||v.dualMaster===v.dualFx)issues.push('Master bus must be distinct from target and FX buses.');
+  if(v.dualMode==='separate'&&v.dualMusic===v.dualTehuti)issues.push('Separate-target mode requires different music and TEHUTI buses.');
+  if(v.dualMode==='parallel'&&v.dualMusic===v.dualTehuti)issues.push('Parallel mode requires separate buses.');
+  if(v.dualFx===v.dualMusic||v.dualFx===v.dualTehuti)issues.push('FX collector must not reuse a processing bus number.');
+  return {v,issues};
+ }
+ const li=items=>items.map(t=>'<li>'+esc(t)+'</li>').join('');
+ function draw(){
+  const {v,issues}=evaluate(),k=esc(v.dualKey),m=esc(v.dualMusic),t=esc(v.dualTehuti),master=esc(v.dualMaster);
+  el('dualStatus').textContent=issues.length?'BLOCKED: '+issues.join(' '):'Routing numbers pass static checks. Verify sends, detector activity and native plugin behavior in Logic.';
+  const separate=v.dualMode==='separate',serial=v.dualMode==='serial';
+  const lane=separate?'Separate instrument / orchestra bus '+t:serial?'Music bus '+m+' → TEHUTI → ANUBIS':'Parallel music branch on Bus '+t;
+  const nodes=[['VOCAL / NARRATION','Normal audible path',20,20],['BUS '+k,'Detector only · No Output',280,20],['ANUBIS · MUSIC DUCK BED','Music Bus '+m,280,130],['TEHUTI · '+v.dualBand,lane,540,130],['MASTER BUS '+master,'Audible program output',750,20]];
+  const box=(a)=>`<g><rect x="${a[2]}" y="${a[3]}" width="205" height="66" rx="8" fill="#242934" stroke="#b99a55"/><text x="${a[2]+10}" y="${a[3]+25}" font-size="14" fill="#f0d9a6">${esc(a[0])}</text><text x="${a[2]+10}" y="${a[3]+46}" font-size="11" fill="#ddd">${esc(a[1])}</text></g>`;
+  el('dualDiagram').innerHTML=`<svg viewBox="0 0 980 225" role="img" aria-label="Vocal detector to Bus ${k}; ANUBIS on music; TEHUTI on ${serial?'same music':'separate'} path; program to master"><defs><marker id="dualArrow" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6" fill="none" stroke="#d5ad5d"/></marker></defs>${nodes.map(box).join('')}<g fill="none" stroke="#d5ad5d" stroke-width="2" marker-end="url(#dualArrow)"><path d="M225 50 L280 50" stroke-dasharray="6 4"/><path d="M380 86 L380 130" stroke-dasharray="6 4"/><path d="M485 164 L540 164"/><path d="M745 164 L850 164 L850 86"/></g><text x="22" y="116" fill="#d6d2c9" font-size="12">Music audio enters ANUBIS independently of vocal key.</text><text x="22" y="205" fill="#b5b5b5" font-size="12">${esc(v.dualMode.toUpperCase())}: schematic only · inspect actual host sends before routing</text></svg>`;
+  el('dualAnubis').innerHTML=li(['Insert on music track / Bus '+m+' (confirmed user setup).','Select Bus '+k+' as Logic external Side Chain.','Music Duck Bed; DUCK mode; verify KEY/gate state against current native build.','Keep original natural recovery; avoid unnecessary added attenuation.','Compare with bypass at matched loudness.']);
+  el('dualTehutiSteps').innerHTML=li(['Insert on '+(serial?'music Bus '+m+' before or after ANUBIS (A/B both orders)': 'selected target Bus '+t)+'.','Select Bus '+k+' as external Side Chain.','Start with '+v.dualBand+' band; raise Depth gently and tune Speed by ear.','Do not assume a fixed makeup gain; test active vocal and silent gaps.','Check actual native LOW / MID / HIGH, DEPTH, SPEED, MIX controls.']);
+  el('dualChecks').innerHTML=li([...issues.map(x=>'ERROR: '+x),'Bus '+k+' aux output must be No Output; trigger vocal stays audible via its normal route.','Do not send a processed return back into its own detector.','Do not sum the same dry music twice in parallel mode.','Confirm ANUBIS reduction follows vocal phrases; TEHUTI band reduction also follows key.','Bus '+v.dualFx+' FX collector and Bus '+master+' master must each receive audible program once.','Check mono, bypass, mute/solo and offline bounce.']);
+  el('dualTests').innerHTML=li(['A. Music bypass (reference).','B. ANUBIS only (retain existing natural ducking).','C. TEHUTI only, key disconnected versus Bus '+k+' connected.','D. Both processors enabled, matched to A/B levels.','Compare singing versus vocal gaps, band-specific gain reduction and recovery.','Reject static gain changes masquerading as sidechain ducking; note source, bus and settings for each bounce.']);
+ }
+ function guide(){const {v,issues}=evaluate();return ['DIH WORLD AUDIO — ANUBIS + TEHUTI DUAL DUCKING','Offline Logic Pro routing worksheet','',...Object.entries(v).map(([k,x])=>k+': '+x),'','ANUBIS: Music Duck Bed on music Bus '+v.dualMusic+'; external key Bus '+v.dualKey+'.','TEHUTI: '+v.dualMode+' arrangement, target Bus '+(v.dualMode==='serial'?v.dualMusic:v.dualTehuti)+'; key Bus '+v.dualKey+'; focus '+v.dualBand+'.','Key-only Bus '+v.dualKey+' must be No Output. Vocal retains normal audible path.','FX collector Bus '+v.dualFx+'; master Bus '+v.dualMaster+'.','','VALIDATION',...(issues.length?issues:['No static bus collisions detected.']), 'Compare bypass, ANUBIS-only, TEHUTI-only and combined, including vocal gaps.','Native DSP response and parameter ranges remain unverified.'].join('\n')}
+ function download(name,contents,type){const blob=new Blob([contents],{type});const a=document.createElement('a');const url=URL.createObjectURL(blob);a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+ all.forEach(id=>el(id).addEventListener('change',draw));
+ el('dualLoad').onclick=()=>{Object.entries({dualKey:'32',dualMusic:'12',dualTehuti:'13',dualFx:'9',dualMaster:'10',dualMode:'separate',dualBand:'MID'}).forEach(([k,v])=>el(k).value=v);draw()};
+ el('dualExport').onclick=()=>{const {v,issues}=evaluate();if(issues.length){el('dualStatus').textContent='Fix routing errors before export.';return;}download('DIH_Dual_Ducking_Routing.json',JSON.stringify({format:'DIH-dual-ducking-v1',configuration:v},null,2),'application/json')};
+ el('dualText').onclick=()=>download('DIH_ANUBIS_TEHUTI_Routing_Guide.txt',guide(),'text/plain');
+ el('dualPrint').onclick=()=>window.print();
+ el('dualImport').onclick=()=>el('dualImportFile').click();
+ el('dualImportFile').onchange=async e=>{try{const f=e.target.files[0];if(!f)return;if(f.size>100000)throw Error('File too large');const obj=JSON.parse(await f.text());if(obj.format!=='DIH-dual-ducking-v1'||!obj.configuration)throw Error('Unrecognized profile');const c=obj.configuration;for(const id of ids)if(!validBus(c[id]))throw Error('Invalid bus value');if(!['separate','serial','parallel'].includes(c.dualMode)||!['LOW','MID','HIGH'].includes(c.dualBand))throw Error('Invalid routing mode or band');all.forEach(id=>el(id).value=c[id]);draw();}catch(err){el('dualStatus').textContent='Import rejected: '+err.message;}finally{e.target.value=''}};
+ draw();
+})();
+
+</script>
+</body>
+</html>

@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DIH World Audio | Nine-Plugin Routing Studio v5</title>
+<style>
+:root{color-scheme:dark}
+*{box-sizing:border-box}
+body{background:#111922;color:#f1efe9;font:15px system-ui,-apple-system,sans-serif;max-width:1220px;margin:auto;padding:24px}
+h1,h2,h3{color:#edc67e}a{color:#edc67e}
+section{border:1px solid #506171;border-radius:12px;padding:18px;margin:16px 0}
+section.hero{border:2px solid #edc67e}
+p,small,.note{color:#c6d0d7}
+label{display:inline-flex;flex-direction:column;gap:5px;margin:6px 12px 6px 0}
+input,select,button{background:#253443;color:white;border:1px solid #b59a6b;border-radius:7px;padding:8px;font:inherit}
+input[type=checkbox]{width:19px;height:19px}
+input[type=number]{width:105px}
+input[type=text]{width:200px}
+button{cursor:pointer;margin:5px}
+table{width:100%;border-collapse:collapse}
+td,th{padding:9px;border-bottom:1px solid #425362;text-align:left;vertical-align:top}
+th{color:#edc67e}
+.scroll{overflow:auto}
+.warn{color:#ffbf95}.bad{color:#ff9b9b}.good{color:#9ce2ba}.info{color:#a9c7e6}
+.flow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.lane{border:1px solid #607384;border-radius:9px;padding:12px;line-height:1.7}
+.lane strong{color:#edc67e}
+.geb{display:grid;grid-template-columns:minmax(130px,190px) minmax(0,1fr);gap:20px;align-items:center;background:#17212a;overflow:hidden}
+.geb-art{width:100%;max-width:172px;margin:auto;display:block;opacity:.22;filter:grayscale(.35) saturate(.7) contrast(.9);mix-blend-mode:screen}
+.geb-kicker{color:#edc67e;font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin:0 0 6px}
+.geb-stages{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:12px}
+.geb-stage{border:1px solid #607384;border-radius:8px;padding:9px;background:#101820}.geb-stage strong{display:block;color:#edc67e;font-size:12px;letter-spacing:.06em}.geb-stage span{color:#c6d0d7;font-size:12px;line-height:1.35;display:block;margin-top:4px}
+.geb details{margin-top:12px}.geb details p{margin:8px 0 0}
+.jeb-controls{display:flex;align-items:end;gap:8px;flex-wrap:wrap;margin-top:14px;padding-top:12px;border-top:1px solid #425362}.jeb-controls label{margin:0;font-size:12px}.jeb-controls input{width:155px}.jeb-controls select{max-width:220px}.jeb-controls button{margin:0}
+.jeb-read{font-size:12px;padding:6px 9px;margin:8px 0 0}.jeb-listening{position:relative;outline:1px solid #edc67e;outline-offset:4px}.jeb-avatar{position:absolute;right:12px;top:12px;width:52px;height:52px;border:1px solid #edc67e;border-radius:50%;background:#17212a url('assets/geb/geb-routing-guide-v1.png') center/84px no-repeat;opacity:.72;box-shadow:0 3px 10px #0008;z-index:2}.jeb-avatar:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.tag{display:inline-block;padding:1px 7px;border-radius:8px;font-size:11px;margin-right:5px;border:1px solid #6b8393}
+.tag.src{border-color:#7fb28f;color:#9ce2ba}.tag.host{border-color:#7ea6d6;color:#a9c7e6}.tag.pend{border-color:#c9a36a;color:#ffbf95}
+svg{max-width:100%;height:auto;min-width:780px}#diagram{overflow:auto}
+details summary{cursor:pointer;color:#edc67e}
+@media(max-width:750px){.flow,.geb-stages{grid-template-columns:1fr}.geb{grid-template-columns:1fr}.geb-art{max-width:132px}.jeb-controls{align-items:stretch}.jeb-controls label{width:100%}.jeb-controls select,.jeb-controls input{max-width:none;width:100%}}
+@media print{button,input[type=file]{display:none}body{background:white;color:black}section{break-inside:avoid}h1,h2,h3,th,a{color:#5a3d00}p,small,.note,.geb-stage span{color:#222}details>*{display:block}.geb{background:white}.geb-stage{background:white}}
+</style>
+</head>
+<body>
+<p><a href="dih_ducking_configurator.html">Original 42-plugin configurator (corrected)</a> · <a href="FULL_NINE_PLUGIN_ROUTING_GUIDE.pdf">Full routing guide (PDF)</a></p>
+<h1>DIH WORLD AUDIO · NINE-PLUGIN ROUTING STUDIO</h1>
+<p>Planning companion · Logic Pro / AU · offline · no direct DAW control · revision 21 November 2026 (v5). Static checks never mean "Logic verified"; the Mode C panel below separates what was measured in Logic 12.2 from what is still untested.</p>
+
+<section class="geb" id="geb-guide" aria-labelledby="geb-title" data-jeb-label="GEB routing-guide identity">
+<img class="geb-art" src="assets/geb/geb-routing-guide-v1.png" alt="GEB, a stylized Kemetic goose and earth guide identity for DIH routing documentation">
+<div>
+<h2 id="geb-title">GEB (Jeb) - Ducking and Sidechain Routing Guide</h2>
+<p class="geb-kicker">GEB / DIH World Audio / Ducking and Sidechain Routing Guide / Control - Route - Balance</p>
+<p>GEB is the visual identity for routing guidance only. It does not rename ANUBIS or any other DIH processor, and it does not change DSP, factory presets, parameter IDs, or plugin identifiers.</p>
+<div class="geb-stages" aria-label="GEB routing stages">
+<div class="geb-stage"><strong>1. KEY / TRIGGER</strong><span>The source signal that controls attenuation. It can travel on a detector-only bus.</span></div>
+<div class="geb-stage"><strong>2. TARGET</strong><span>The audible program or wet return being processed. It is not the key bus.</span></div>
+<div class="geb-stage"><strong>3. DUCKING</strong><span>Gain reduction while a valid key is active. Measure it in the host; this page has no meter feed.</span></div>
+<div class="geb-stage"><strong>4. RECOVERY</strong><span>The target returns toward normal after the key falls. Check it in program gaps and tails.</span></div>
+</div>
+<details><summary>GEB routing safeguards</summary><p>A No Output detector bus is never an audible return. A wet effect return needs an audible destination. In the alternate unity-collector route, the collector main output remains No Output while its documented downstream send feeds the audible return. Keep trigger, target, return, and master paths independent to prevent feedback or accidental doubled audio.</p></details>
+<div class="jeb-controls" aria-label="Jeb spoken-guide controls">
+<label>Section<select id="jebSection"><option value="geb-guide">GEB identity</option><option value="owner-chain">Original workflow: TEHUTI → ANUBIS</option><option value="routing-modes">Three routing modes (A, B, C)</option><option value="detector-feed">Detector feed (modes A and B)</option><option value="mode-c">Mode C collector: measured in Logic</option><option value="logic-setup">Logic setup and verification</option></select></label>
+<label>Voice<select id="jebVoice"><option value="">System default voice</option></select></label>
+<label>Speed <input id="jebRate" type="range" min="0.6" max="1.25" step="0.05" value="0.8"><output id="jebRateValue">0.80x</output></label>
+<button id="jebRead" type="button">Have Jeb read selected section</button><button id="jebPause" type="button">Pause</button><button id="jebResume" type="button">Resume</button><button id="jebStop" type="button">Stop</button>
+</div>
+<p id="jebStatus" class="note" aria-live="polite">Jeb uses your browser's available system voice. This control reads documentation; it has no connection to Logic meters or plug-in DSP.</p>
+</div>
+</section>
+
+<section class="hero" id="owner-chain" data-jeb-label="TEHUTI and ANUBIS owner chain">
+<h2>Original workflow: TEHUTI → ANUBIS on Bus 32</h2>
+<p>Track 1 vocal/narration stays audible and has a send to <strong>Bus 32</strong> (send level adjustable). Bus 32 is a detector-only auxiliary with output <strong>No Output</strong>. Track 2 music runs <strong>TEHUTI first, then ANUBIS</strong> (preset <em>TEHUTI DUCK GUARD [Stereo]</em>, Sidechain Key OFF, Sidechain Duck ON). ANUBIS selects Bus 32 in its Side Chain menu; TEHUTI's selection is independent and subject to its own validation. This architecture is preserved; the alternate collector mode below is an addition, not a replacement.</p>
+<button id="loadChain" type="button">Load TEHUTI → ANUBIS / Bus 32</button><button id="loadAnubisOnly" type="button">Load ANUBIS-only Music Bus Duck</button><button id="loadAlt" type="button">Load Alternate Unity Collector → Separate Return</button>
+</section>
+
+<section id="routing-modes" data-jeb-label="Three routing modes">
+<h2>Three routing modes, kept distinct</h2>
+<div class="flow">
+<div class="lane"><strong>A · Detector only</strong><p>Source track → Bus 32 → external plugin sidechain. Bus 32 aux: No Output. The source stays audible through its normal output.</p></div>
+<div class="lane"><strong>B · Conventional wet return</strong><p>Source → effects bus → reverb/delay → ANUBIS if selected → audible return aux → mix. The return outputs to the mix.</p></div>
+<div class="lane"><strong>C · Alternate Unity Collector</strong><p>Source → unity send → collector aux (No Output, reverb/delay then ANUBIS) → separate aux send that sets the audible amount → destination bus → audible return aux → mix. A valid configuration, not an error. Signal delivery from a No Output collector's send was verified in Logic 12.2 on 21 November 2026 (see the Mode C section).</p></div>
+</div>
+<p class="warn">No Output on a main output is not the same as disabling that aux's sends. A detector or collector aux may be No Output; anything meant to be heard needs an audible output.</p>
+</section>
+
+<section id="mode-c" data-jeb-label="Mode C alternate unity collector, measured in Logic 12.2">
+<h2>Mode C · Alternate Unity Collector: what Logic Pro 12.2 measured</h2>
+<p>Source → normal output plus a unity send → collector aux (reverb/delay, then ANUBIS; main output No Output) → separate aux send → destination bus → audible return aux → mix. This section lists what was measured on 21 November 2026 and what is still untested. The editable Mode C settings appear below when you pick the Mode C workflow.</p>
+<details class="note" id="modec_evidence" open><summary>Mode C measured in Logic Pro 12.2 (21 November 2026) — what is verified and what is not</summary>
+<p><strong>Setup tested:</strong> Audio 1 vocal (34 s) → Stereo Out + Send 1 at 0 dB → Bus 36 → collector aux (SacredVerb at WET MIX 1.00, then ANUBIS: Side Chain = Audio 1, DUCK ON, KEY OFF, Range −19.8, Threshold −80.0, Attack 1.6, Release 48.5; main output No Output) → Send 2 → Bus 37 → return aux → Stereo Out. Offline bounces, WAVE 24-bit 48 kHz; report <code>CLAUDE_MODEC_FULL_TESTS_20261121.md</code>.</p>
+<ul>
+<li><strong>Source stays audible, no doubled dry:</strong> with the return off the bounce equals the dry vocal bit-exactly (residual −240 dB). The return itself carries no dry vocal (correlation with the dry at lag 0 about −0.07).</li>
+<li><strong>No Output collector delivers:</strong> Send 2 on → return present; Send 2 power off → bit-exact silence. The destination aux is audible (muting it removes the return).</li>
+<li><strong>Pre/post:</strong> Logic's default for this send is <em>Post Pan</em>. With the collector fader at −12 dB: Post Pan −12.1/−11.7/−12.5 dB, Post Fader −12.1/−11.8/−12.1 dB, Pre Fader −0.2/+0.2/+0.3 dB. Post follows the collector fader; Pre ignores it.</li>
+<li><strong>ANUBIS ducks and recovers:</strong> about −19.8 to −20.3 dB on the wet return during phrases (full depth within about 20 ms); recovered to about 0 dB by about 0.4 s after a phrase ends, and the reverb tail after the last phrase matches the unducked tail (within about 1 dB). A 0.84 s gap recovers to about −1 dB before the next phrase.</li>
+<li><strong>Detector independence:</strong> Send 2 at −6 dB scaled the return by −6.0 dB with an unchanged duck pattern; ANUBIS meters read the same (IN 68 %, DUCK −19.8 dB) with Send 2 at 0 or −6 dB or the return aux muted; the duck is the same with the source track's main output set to No Output.</li>
+<li><strong>Save / reopen and realtime:</strong> Side Chain, Duck and Range persisted after quit and reopen; offline, reopened and realtime bounces agree within 0.1–0.5 dB. SacredVerb's reverb is not sample-identical between renders (return correlation 0.31–0.44), so wet levels, not sample nulls, are the valid comparison.</li>
+<li class="warn"><strong>SacredVerb Reverb Duck:</strong> shipped default 50.00 (keyed from its own Side Chain) adds about 2–5 dB of extra duck. Set 0.00 for Mode C. Changing the default needs the next canon build.</li>
+<li><strong>Not yet tested in Mode C:</strong> TEHUTI, LookOut, SILVER and mono sources as the collector/detector, other reverbs or delays, other Logic versions, and a detector bus (instead of the Audio track) as the ANUBIS key.</li>
+</ul></details>
+</section>
+
+<section data-jeb-label="Editable Logic bus assignments">
+<h2>Editable Logic bus assignments</h2>
+<div id="buses"></div>
+<p class="note">Bus 32 is the owner's working vocal detector reference; all other numbers are examples. A detector bus must never share a number with an audible target or return.</p>
+</section>
+
+<section id="detector-feed" data-jeb-label="Detector feed">
+<h2>Detector feed (modes A and B)</h2>
+<label>Feed mode<select id="feedMode"><option value="full">Source send at 0 dB (unity reference)</option><option value="adjustable">Adjustable send, set in Logic</option></select></label>
+<label>Send point<select id="sendPoint"><option value="post">Post-fader</option><option value="pre">Pre-fader</option></select></label>
+<label>Detector aux output<select id="collectorOut"><option value="noout">No Output (detector-only)</option><option value="audible">Audible (monitoring the key on purpose)</option></select></label>
+<p class="note">The source send level and the detector aux fader are separate controls. 0 dB is the unity reference, not a required setting. Pre/post is always stated in the generated steps.</p>
+</section>
+
+<section id="altsec" data-jeb-label="Mode C alternate unity collector">
+<h2>Alternate Unity Collector → Separate Return (mode C)</h2>
+<div>
+<label>Source track<input type="text" id="alt_source" value="Track 1 (vocal / narration)"></label>
+<label>Source normal output<select id="alt_sourceOut"><option value="mix">Stereo Out / mix (audible)</option><option value="bus">An audible bus</option><option value="noout">No Output (not intended)</option></select></label>
+<label>Source send level<select id="alt_srcLevel"><option value="unity">0 dB (unity, default)</option><option value="bylogic">Other: set in Logic</option></select></label>
+<label>Source send mode<select id="alt_srcMode"><option value="post">Post-fader</option><option value="pre">Pre-fader</option></select></label>
+</div><div>
+<label>Collector aux main output<select id="alt_collOut"><option value="noout">No Output</option><option value="audible">Audible (not the alternate configuration)</option></select></label>
+<label>Collector aux fader<select id="alt_collFader"><option value="unity">0 dB reference</option><option value="byear">Set in Logic by ear</option></select></label>
+<label>Effect insert before ANUBIS<select id="alt_effect"><option value="reverb">Reverb</option><option value="delay">Delay</option><option value="other">Other effect</option><option value="none">None (plain collector)</option></select></label>
+<label>Effect name<input type="text" id="alt_effectName" value=""></label>
+</div><div>
+<label>Collector → return send<select id="alt_sendOn"><option value="yes">Present</option><option value="no">Not configured</option></select></label>
+<label>Audible amount: collector → return send<select id="alt_retLevel"><option value="unity">0 dB reference</option><option value="byear">Set the audible amount in Logic</option></select></label>
+<label>Send mode<select id="alt_retMode"><option value="postpan">Post Pan (Logic default for this send, measured: follows the collector fader)</option><option value="post">Post-fader (measured: follows the collector fader)</option><option value="pre">Pre-fader (measured: ignores the collector fader)</option><option value="unconfirmed">Unconfirmed (test pre and post)</option><option value="other">Other host-supported mode</option></select></label>
+<label>Destination return aux output<select id="alt_retOut"><option value="mix">Stereo Out / mix (audible)</option><option value="noout">No Output</option></select></label>
+</div><div>
+<label>Optional sidechain detector for<select id="alt_detPlugin"><option value="none">None</option><option value="ANUBIS">ANUBIS</option><option value="TEHUTI">TEHUTI</option><option value="both">ANUBIS and TEHUTI</option></select></label>
+<label>Detector taken from<select id="alt_detSource"><option value="detector">Detector Bus (vocal key bus)</option><option value="collector">The collector bus</option></select></label>
+</div>
+<p class="note">In this DIH alternate route, the collector main output stays No Output. Put ANUBIS after the reverb/delay on the collector. The additional collector-to-return send dictates how much processed reverb/delay is actually heard. The return-send mode now defaults to Logic's own default (Post Pan), which was measured to follow the collector fader; Pre-fader was measured to ignore it. Choose deliberately: it decides whether the collector fader is part of the wet amount.</p>
+</section>
+
+<section data-jeb-label="Routing scenario selector">
+<h2>Routing scenario</h2>
+<label>Workflow<select id="workflow">
+<option value="chain">A · TEHUTI → ANUBIS on Bus 32 (original)</option>
+<option value="anubisonly">A · ANUBIS-only Music Bus Duck</option>
+<option value="standard">A · Standard external key / source-to-target</option>
+<option value="wet">B · Narration → wet reverb return duck</option>
+<option value="delay">B · Narration → wet delay return duck</option>
+<option value="altcollector">C · Alternate Unity Collector → Separate Return</option>
+<option value="capture">Drum Morpher external audio capture</option>
+<option value="reference">SILVER reference matching</option>
+</select></label>
+<label>Wet send level (planning only)<select id="wetSend"><option value="user-set">Set in Logic by ear</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></label>
+</section>
+
+<section data-jeb-label="Nine plugin modules">
+<h2>All nine plugin modules</h2>
+<div class="scroll"><table><thead><tr><th>Plugin / behavior</th><th>Audio target</th><th>External feed</th><th>Enable</th></tr></thead><tbody id="processors"></tbody></table></div>
+<div id="validation" role="status"></div>
+</section>
+
+<section data-jeb-label="Signal flow diagram">
+<h2>Signal-flow diagram</h2>
+<div id="diagram"></div>
+<p class="note">Solid arrows = audible signal. Dashed arrows = detector / key. A diagram is a proposed patch, not proof of Logic connectivity.</p>
+</section>
+
+<section id="logic-setup" data-jeb-label="Logic setup and mandatory verification">
+<h2>Logic setup — generated per workflow</h2>
+<ol id="instructions"></ol>
+<h2>Mandatory verification</h2>
+<ol id="verification"></ol>
+</section>
+
+<section>
+<h2>Test record (fill in during the Logic session)</h2>
+<p class="note">Free-form fields only. Nothing here is pre-filled with a measured value.</p>
+<div id="testrec"></div>
+<label>Notes<input type="text" id="tr_notes" style="width:420px"></label>
+</section>
+
+<section>
+<h2>Help: the nine modules and what is established</h2>
+<div class="scroll"><table><thead><tr><th>Plugin</th><th>Behavior</th><th>Routing distinction</th><th>Status</th></tr></thead><tbody id="helptable"></tbody></table></div>
+<p class="note">Host tags cite bounded Logic 12.2 bounce tests made on 20 November. They establish only the named configuration, default/preset state, and source material; they are not an all-settings certification. The precise evidence and remaining work are in <a href="HOST_TEST_LOG.pdf">HOST_TEST_LOG.md</a>.</p>
+<details><summary>Known build notes (owner / internal, 20 Nov 2026)</summary><div id="notesbody"></div></details>
+</section>
+
+<section>
+<button id="json" type="button">Export JSON</button><button id="txt" type="button">Export instructions</button><button id="print" type="button">Print / Save PDF</button>
+<label>Import JSON<input type="file" id="import" accept=".json,application/json"></label>
+</section>
+
+<script>
+'use strict';
+const FORMAT='DIH-nine-plugin-routing-v4';
+const OLD_FORMATS=['DIH-nine-plugin-routing-v3','DIH-nine-plugin-routing-v2','DIH-nine-plugin-routing-v1','DIH-eight-plugin-routing-v1'];
+const WORKFLOWS=['chain','anubisonly','standard','wet','delay','altcollector','capture','reference'];
+/* kind: detector = key bus, collector = No Output collector aux, target = audible program bus, return = audible wet return */
+const BUS_ROLES=[['vocal','Narration / vocal key (detector)','detector',32],['kick','Kick detector','detector',33],['music','Music target','target',12],['drums','Drum target','target',14],['bass','Bass target','target',15],['impact','Impact target','target',16],['fx','FX target','target',9],['master','Master target','target',10],['capture','Capture feed','detector',34],['reference','Reference key','detector',35],['reverb','Audible reverb return','return',36],['delay','Audible delay return','return',37],['collector','Alternate collector bus','collector',38],['altdest','Alternate destination bus','return',39]];
+const KIND=Object.fromEntries(BUS_ROLES.map(([id,,k])=>[id,k]));
+const OPTIONAL_ROLES=['reverb','delay','collector','altdest'];
+const PLUGINS=[
+{name:'ANUBIS',purpose:'Broadband music/return duck',target:'music',source:'vocal',type:'duck',on:true},
+{name:'TEHUTI',purpose:'Three-band spectral duck',target:'music',source:'vocal',type:'spectral',on:true},
+{name:'DrumKrushGlue',purpose:'Drum pocket / glue',target:'drums',source:'kick',type:'duck',on:false},
+{name:'MARIANA',purpose:'Bass foundation duck',target:'bass',source:'kick',type:'duck',on:false},
+{name:'MONOLITH',purpose:'Impact / weight duck',target:'impact',source:'kick',type:'duck',on:false},
+{name:'Drum Morpher',purpose:'METAMORPH external capture',target:'capture',source:'music',type:'capture',on:false},
+{name:'LookOut',purpose:'Transient Key and/or Duck',target:'drums',source:'kick',type:'keyduck',on:false},
+{name:'SILVER',purpose:'Reference level matching',target:'master',source:'reference',type:'reference',on:false},
+{name:'NTRPL',purpose:'Rewrite-layer duck',target:'music',source:'vocal',type:'rewrite',on:false}
+];
+const HELP={
+'ANUBIS':{behavior:'Broadband duck / external gate. KEY drives gate detection; DUCK drives external duck reduction; DUCK works with KEY off when a key is present. Attack, Hold and Release are milliseconds.',distinct:'KEY and DUCK are independent. Preset TEHUTI DUCK GUARD [Stereo] = KEY off, DUCK on.',status:[['src','source: KEY/DUCK semantics, ms units, preset values'],['host','Logic 12.2: owner-order TEHUTI → ANUBIS Bus 32 chain measured; ANUBIS alone was −4.65 dB active / 0.00 dB gaps'],['pend','listen/evaluate alternate presets and mono/stereo beyond this one bounce']]},
+'TEHUTI':{behavior:'Three-band spectral duck. Crossovers at 161.8 Hz and 1618 Hz (PHI x 100, PHI x 1000). No Attack/Hold/Release controls; DEPTH and SPEED shape the reduction.',distinct:'Placed before ANUBIS in the coordinated chain. Its key response is measured on its own; never infer it from ANUBIS gain reduction.',status:[['src','source: bands, crossovers, controls'],['host','Logic 12.2: Bus 32 result was −0.71 dB active / −0.02 dB gaps; owner-order chain also measured'],['pend','Side Chain None still has an unexplained ≈−1.1 dB gap offset; do not use None as a neutral baseline']]},
+'DrumKrushGlue':{behavior:'Drum pocket / glue. External key (40–180 Hz band follower) ducks the added effect layer.',distinct:'Glue coloration is not detector action; test key on and off.',status:[['src','source: kick-band detector, effect-layer duck'],['host','Logic 12.2 default-preset A/B/C bounce: added layer +4.24 dB; key-on vs key-off −0.78 dB mean (min −2.28 dB)'],['pend','repeat with chosen production preset, mono/stereo and listening']]},
+'MARIANA':{behavior:'Bass foundation. Key (35–160 Hz band follower) ducks the generated pressure/foundation layer only.',distinct:'Do not assume the dry bass ducks.',status:[['src','source: detector band, layer-only duck'],['host','Logic 12.2 default-preset A/B/C bounce: added layer +3.35 dB; key-on vs key-off −0.51 dB mean (min −1.51 dB)'],['pend','repeat with chosen production preset, mono/stereo and listening']]},
+'MONOLITH':{behavior:'Impact / weight. Key (40–180 Hz band follower) ducks the added Stone layer.',distinct:'The audible impact target stays distinct from the key.',status:[['src','source: detector band, layer duck'],['host','Logic 12.2 default-preset A/B/C bounce: added layer +3.22 dB; key-on vs key-off −0.53 dB mean (min −1.64 dB)'],['pend','repeat with chosen production preset, mono/stereo and listening']]},
+'Drum Morpher':{behavior:'METAMORPH instrument capture.',distinct:'Not a ducker. Preserve MIDI pads independently from the MPC-sidechain capture path.',status:[['src','source: capture design and kSidechainChannels = 0'],['host','owner-confirmed: numerous MPC-sidechain tests work inside Drum Morpher (21 Nov 2026)'],['pend','archive WAV bounces and metadata only if a measured level analysis is later needed']]},
+'LookOut':{behavior:'Transient key and broadband duck with independent Key and Duck switches.',distinct:'Test Key only, Duck only and Key + Duck separately.',status:[['src','source read: duck follows raw instantaneous key level and acts on whole output'],['host','Logic 12.2 default bounce: Duck on vs neither −1.66 dB mean, p10 −3.98 dB, min −5.93 dB'],['pend','Key-only and Key+Duck remain separate tests; judge high Duck Amount by ear']]},
+'SILVER':{behavior:'Reference-driven level matching with a two-channel reference sidechain.',distinct:'The reference is not a ducking detector and not an audible track.',status:[['src','source: two-channel reference follower, Ref Match 0..1'],['host','Logic 12.2: verified Reference control moved output; real-reference run swung −6.50 to +12.92 dB by 0.25 s window'],['pend','choose/refine smoothing by ear; this is level following, not ducking']]},
+'NTRPL':{behavior:'Rewrite-layer duck (Interpol).',distinct:'The key attenuates the generated rewrite layer, not the whole main signal.',status:[['src','source: rewrite-layer duck and sidechain controls'],['host','Logic 12.2 default A/B/C bounce: key-on vs key-off −0.04 dB mean, min −0.52 dB; main path stayed near unity'],['pend','repeat with a production rewrite amount and listening']]}
+};
+const NOTES=[
+'Chain order: the owner decision is TEHUTI before ANUBIS. That order was measured in Logic 12.2 with Bus 32: TEHUTI + ANUBIS was −5.41 dB active / −0.03 dB gaps relative to bypass in a single real-stem bounce. This does not validate every preset or level.',
+'The shared AU wrapper now accepts Logic\'s empty sidechain disconnect property-set: the installed TEHUTI direct probe returned 0 for NULL,0 callbacks and connections. In Logic, Side Chain None no longer behaved identically to Bus 32, but TEHUTI still showed an unexplained ≈−1.1 dB gap offset with None. To establish a neutral no-key comparison, remove the send or bypass the plugin.',
+'Mono tracks: older ANUBIS and DrumKrushGlue builds sent the key into the right output; older MARIANA and MONOLITH heard the key at about half strength. Fixed in the 20 Nov builds (offline test only). NTRPL, SILVER, LookOut and Drum Morpher were not reviewed for this.',
+'ANUBIS: duck depth now rises from the Threshold control over a window above it (before, Threshold had no effect in DUCK mode). Presets and their stored values are unchanged.',
+'Native DSP was changed on 20 Nov 2026 at the owner\'s request (TEHUTI, ANUBIS, MARIANA, MONOLITH, DrumKrushGlue and the shared AU wrapper). This package itself contains no native code.'
+];
+const TEST_FIELDS=[['build','Plugin build / version','text'],['logic','Logic version','text'],['sc','AU sidechain input exposed and responding','sel:unknown,yes,no'],['bypass','Level: processor bypassed','text'],['active','Level: key active','text'],['gap','Level: key gap','text'],['bounce','Offline bounce matches playback','sel:unknown,yes,no'],['recall','Recall after save / reopen','sel:unknown,pass,fail'],['monostereo','Mono and stereo checked','sel:unknown,yes,no'],['collsend','Collector send delivers from a No Output aux','sel:unknown,yes,no'],['pre','Pre-fader collector send behavior','text'],['post','Post-fader collector send behavior','text']];
+
+const esc=x=>String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function defaultAlt(){return {source:'Track 1 (vocal / narration)',sourceOut:'mix',srcLevel:'unity',srcMode:'post',collOut:'noout',collFader:'unity',effect:'reverb',effectName:'',sendOn:'yes',retLevel:'unity',retMode:'postpan',retOut:'mix',detPlugin:'none',detSource:'detector'}}
+function defaultConfig(){return {format:FORMAT,workflow:'chain',wetSend:'user-set',feed:{mode:'full',sendPoint:'post',collectorOut:'noout'},alt:defaultAlt(),buses:Object.fromEntries(BUS_ROLES.map(([id,,,n])=>[id,n])),plugins:PLUGINS.map(p=>({name:p.name,type:p.type,target:p.target,source:p.source,enabled:p.on})),testRecord:{}};}
+function applyWorkflow(c,w){c.workflow=w;const pl=n=>c.plugins.find(p=>p.name===n);
+ if(w==='chain'){for(const n of ['ANUBIS','TEHUTI']){const p=pl(n);p.enabled=true;p.target='music';p.source='vocal'}}
+ if(w==='anubisonly'){const a=pl('ANUBIS'),t=pl('TEHUTI');a.enabled=true;a.target='music';a.source='vocal';t.enabled=false}
+ if(w==='wet'||w==='delay'){const a=pl('ANUBIS');a.enabled=true;a.target=w==='wet'?'reverb':'delay';a.source='vocal'}
+ if(w==='altcollector'){c.alt.sendOn='yes';c.alt.retOut='mix';c.alt.collOut='noout'}
+ if(w==='capture')pl('Drum Morpher').enabled=true;
+ if(w==='reference')pl('SILVER').enabled=true;
+ return c}
+function validate(c){
+ const errors=[],warnings=[],hostChecks=[],info=[];
+ for(const [role,num] of Object.entries(c.buses))if(!Number.isInteger(num)||num<1||num>256)errors.push('Invalid bus number for '+role);
+ const alt=c.workflow==='altcollector';
+ const used=Object.entries(c.buses).filter(([r])=>!OPTIONAL_ROLES.includes(r)||(r==='reverb'&&c.workflow==='wet')||(r==='delay'&&c.workflow==='delay')||((r==='collector'||r==='altdest')&&alt));
+ const byNum={};for(const [role,num] of used)(byNum[num]=byNum[num]||[]).push(role);
+ for(const [num,roles] of Object.entries(byNum)){if(roles.length<2)continue;const kinds=new Set(roles.map(r=>KIND[r]));
+  const audible=kinds.has('target')||kinds.has('return');
+  if((kinds.has('detector')||kinds.has('collector'))&&audible)errors.push('Bus '+num+' is both a detector/collector and an audible bus ('+roles.join(', ')+'): a No Output key or collector bus must not be an audible target or return');
+  else if(!audible)info.push('Bus '+num+' is shared by key/collector roles ('+roles.join(', ')+'): intended only if one aux serves both');
+  else warnings.push('Bus '+num+' is shared by audible roles ('+roles.join(', ')+'): intentional only if they really are one bus');}
+ const active=c.plugins.filter(p=>p.enabled);
+ for(const p of active){
+  if(p.source==='none')errors.push(p.name+': no external feed selected');
+  if(p.source===p.target)errors.push(p.name+': same source and target (feedback risk)');
+  if(p.source!=='none'&&c.buses[p.source]===c.buses[p.target])errors.push(p.name+': key and target use the same bus');
+  if(['reverb','delay'].includes(p.source))errors.push(p.name+': an audible return cannot be its own detector');
+  if(['reverb','delay'].includes(p.target)&&!['duck','spectral','keyduck','rewrite'].includes(p.type))warnings.push(p.name+': placed on a wet return but is not a conventional wet ducker');
+  if(p.type==='capture'&&p.target!=='capture')warnings.push('Drum Morpher: target is not a capture destination');
+  if(p.type==='reference'&&p.source!=='reference')warnings.push('SILVER: reference track is not selected');}
+ if(c.workflow==='chain'){const A=c.plugins.find(p=>p.name==='ANUBIS'),T=c.plugins.find(p=>p.name==='TEHUTI');
+  if(!A.enabled||!T.enabled)errors.push('TEHUTI → ANUBIS workflow needs both modules enabled');
+  else{if(A.target!==T.target)errors.push('TEHUTI and ANUBIS must sit on the same audible target in this chain');if(A.source!==T.source)info.push('TEHUTI and ANUBIS use different key sources; the original chain uses Bus '+c.buses.vocal+' for ANUBIS and TEHUTI is independently configurable')}}
+ if(c.workflow==='anubisonly'&&!active.some(p=>p.name==='ANUBIS'))errors.push('ANUBIS-only workflow needs ANUBIS enabled');
+ if(['wet','delay'].includes(c.workflow)){const wet=c.workflow==='wet'?'reverb':'delay';
+  if(!active.some(p=>p.target===wet))errors.push('Wet workflow selected but no enabled plugin sits on the '+wet+' return');
+  if(!active.some(p=>p.target===wet&&p.source==='vocal'))warnings.push('Narration key is not selected for the wet-return processor');
+  if(c.feed.collectorOut==='noout'&&c.buses[wet]===c.buses.vocal)errors.push('The wet return shares the detector bus number');}
+ if(alt){const a=c.alt,b=c.buses;
+  if(a.sourceOut==='noout')errors.push('Alternate collector: the source track has no normal audible output, so the dry signal is lost');
+  if(a.collOut==='audible')warnings.push('Collector aux output is audible: this is no longer the No Output collector configuration, and the dry/effect signal may be doubled');
+  if(b.collector===b.altdest)errors.push('Alternate collector: the collector bus and the destination bus have the same number (the collector would send into itself)');
+  if(a.sendOn==='no'&&a.collOut==='noout')warnings.push('The collector is No Output and has no downstream send configured: nothing audible will come out of it');
+  if(a.sendOn==='yes'&&a.retOut==='noout')errors.push('The destination return aux is set to No Output but is meant to be heard');
+  if(a.sendOn==='no'&&a.retOut==='mix')warnings.push('A destination return aux is audible but no collector-to-return send feeds it');
+  if(a.sendOn==='yes'&&a.effect==='none'&&a.retOut==='mix')warnings.push('The collector has no effect and its send feeds an audible return: the dry source would be heard twice');
+  if(a.sendOn==='yes'&&['reverb','delay'].includes(a.effect))warnings.push('Set the collector '+a.effect+' to 100% wet so the dry source is not duplicated');
+  if(a.detPlugin!=='none'){const key=a.detSource==='collector'?b.collector:b.vocal;
+   if(key===b.altdest)errors.push('The detector for '+a.detPlugin+' is the destination (audible return) bus: a return must not feed its own key');
+   if(a.detSource==='collector'&&a.collOut==='noout')hostChecks.push('The detector is taken from the collector bus: confirm the plugin receives it from a No Output aux.');}
+  if(a.retMode==='pre')info.push('Pre-fader return: measured in Logic 12.2 to ignore the collector fader. Pulling the collector fader down will NOT lower the wet return; set the amount with the Send 2 level.');
+  if(a.retMode==='postpan'||a.retMode==='post')info.push('Post-pan / post-fader return: measured in Logic 12.2 to follow the collector fader (-12 dB fader = about -12 dB return). The collector fader is part of the wet amount.');
+  if(a.sendOn==='yes'&&a.effect==='reverb')warnings.push('If the collector reverb is SacredVerb, set its Reverb Duck to 0.00 for Mode C. The shipped default is 50.00: a second duck (keyed from its own Side Chain) that stacks on ANUBIS for about 2 to 5 dB extra reduction. Changing the shipped default is pending the next canon build.');
+  if(a.retMode==='unconfirmed')warnings.push('The collector-to-return send mode (pre/post) is unconfirmed: test both in Logic');
+  if(a.sendOn==='yes'&&a.collOut==='noout')hostChecks.push('Delivery from a No Output collector was proven in Logic 12.2 on 21 Nov 2026 (return present with Send 2 on, bit-exact silence with it off). Re-check on a different Logic version or when the effect or ANUBIS build changes: listen at the return and meter the return aux.');}
+ if(c.workflow==='capture'&&!active.some(p=>p.type==='capture'))warnings.push('Capture workflow selected without Drum Morpher enabled');
+ if(c.workflow==='reference'&&!active.some(p=>p.type==='reference'))warnings.push('Reference workflow selected without SILVER enabled');
+ if(!alt){if(c.feed.collectorOut==='noout')hostChecks.push('The detector aux is set to No Output: confirm in the current plugin that the Side Chain menu still delivers the key (a meter move or a key/no-key level change). This worked for ANUBIS on one Logic setup; check each plugin and build.');
+  else hostChecks.push('The detector aux is audible: make sure the key is not doubling the source in the mix.');}
+ if(active.some(p=>p.type==='capture'))hostChecks.push('Drum Morpher: whether Logic exposes an audio input to the installed AU instrument is unverified.');
+ if(active.length)hostChecks.push('Choosing "Side Chain: None" may not disconnect a key on plugin builds made before 20 Nov 2026 (see Known build notes). Remove the send or bypass the plugin to prove a no-key state.');
+ if(active.some(p=>['ANUBIS','DrumKrushGlue','MARIANA','MONOLITH'].includes(p.name)))hostChecks.push('On mono tracks, check that the key is not heard in the right output or at half strength on builds before 20 Nov 2026.');
+ return {errors,warnings,hostChecks,info};
+}
+function feedLines(c){const f=c.feed,out=[];
+ out.push(f.mode==='full'?'Source send level: 0 dB (unity reference, not a required setting).':'Source send level: set in Logic for a reduced key; judge by the key meter. No number is prescribed.');
+ out.push('Send point: '+(f.sendPoint==='post'?'POST-fader, so the key follows the source fader and mute.':'PRE-fader, so the key stays independent of the source fader; check the key when the source fader is pulled down.'));
+ out.push('The source send level and the aux fader are separate controls; set and judge them separately.');
+ out.push(f.collectorOut==='noout'?'Detector aux output: No Output (detector-only). Do not mute the send and do not assume a muted aux behaves like No Output. Host check: confirm the plugin still receives the key.':'Detector aux output: audible on purpose; keep it from doubling the source.');
+ return out}
+function stepsFor(p,c){const b=c.buses,wet=['reverb','delay'].includes(p.target),a=[];
+ a.push(p.name+': keep the normal audible source and target paths.');
+ feedLines(c).forEach(x=>a.push(x));
+ a.push('Create or select the '+p.source+' feed on Bus '+b[p.source]+'.');
+ if(wet)a.push('Create a SEPARATE narration send to Bus '+b[p.target]+' ('+p.target+' return). Insert the '+p.target+' at 100% wet, then '+p.name+'. Return output: Stereo Out / audible mix. Bypass '+p.name+' first and hear the wet tail.');
+ else a.push('Insert '+p.name+' on the '+p.target+' target (Bus '+b[p.target]+'); its output stays audible.');
+ a.push('Select Bus '+b[p.source]+' in '+p.name+'\'s Side Chain menu if the AU exposes it; verify the detector responds and no feedback loop forms.');
+ if(p.name==='TEHUTI')a.push('TEHUTI: measure its own key response with ANUBIS bypassed. Crossovers 161.8 Hz and 1618 Hz (source). Start with one band and raise DEPTH gradually.');
+ else if(p.name==='ANUBIS')a.push('ANUBIS: for the coordinated chain pick preset TEHUTI DUCK GUARD [Stereo] (source values: threshold -38 dB, ratio 3:1, attack 2 ms, hold 70 ms, release 220 ms, range -30 dB). After recall confirm Sidechain Key OFF and Sidechain Duck ON. Factory values, not a promised reduction.');
+ else if(p.type==='capture')a.push('Drum Morpher is capture, not ducking: check that Logic exposes an input, then test capture, monitoring and silence detection; keep MIDI independent.');
+ else if(p.type==='reference')a.push('SILVER: choose the reference bus as the external input, enable Reference and Ref Match; the reference is neither a detector nor an audible track.');
+ else if(p.type==='keyduck')a.push('LookOut: test Key only, Duck only, then Key + Duck.');
+ else if(p.type==='rewrite')a.push('NTRPL: enable Sidechain Key; check that only the rewrite layer is attenuated.');
+ a.push('Test bypass / no key / key active / key gap, record the levels in the test record, then bounce and reopen.');
+ return a}
+function chainSteps(c){const b=c.buses,s=[];
+ s.push('Track 1 (vocal): main output stays audible. Add a send to Bus '+b.vocal+'.');
+ feedLines(c).forEach(x=>s.push(x));
+ s.push('Bus '+b.vocal+' aux: input from the Track 1 send; output per the detector setting above.');
+ s.push('Track 2 (music, Bus '+b.music+'): insert order TEHUTI first, then ANUBIS, then the audible mix output.');
+ s.push('TEHUTI: choose its Side Chain independently (Bus '+b.vocal+' for the shared reference). Measure its key response on its own with ANUBIS bypassed (start with the MID band for a voice).');
+ s.push('ANUBIS: Side Chain = Bus '+b.vocal+', preset TEHUTI DUCK GUARD [Stereo] (source values: threshold -38 dB, ratio 3:1, attack 2 ms, hold 70 ms, release 220 ms, range -30 dB). Confirm Sidechain Key OFF, Sidechain Duck ON after recall.');
+ s.push('Test in this order at matched level: dry music, TEHUTI alone, ANUBIS alone, both. Capture key-active phrases and key gaps.');
+ s.push('Confirm Bus '+b.vocal+' is not audible as a second voice, then bounce, reopen and recall.');
+ return s}
+function anubisOnlySteps(c){const b=c.buses,s=[];
+ s.push('Track 1 (vocal) → send to Bus '+b.vocal+'; its main output stays audible.');
+ feedLines(c).forEach(x=>s.push(x));
+ s.push('Track 2 (music, Bus '+b.music+'): insert ANUBIS only; Side Chain = Bus '+b.vocal+'. Use MUSIC BUS DUCK or another native preset and re-check Sidechain Key / Sidechain Duck after recall.');
+ s.push('Confirm reduction during speech and recovery in the gaps; this workflow is independent of TEHUTI.');
+ return s}
+const LV={unity:'0 dB (unity reference)',bylogic:'set in Logic',byear:'set in Logic by ear'};
+const RMD={postpan:'POST-PAN (Logic default for this send; measured in Logic 12.2: the return follows the collector fader, -12 dB fader = -12 dB return)',post:'POST-fader (measured in Logic 12.2: the return follows the collector fader)',pre:'PRE-fader (measured in Logic 12.2: the return IGNORES the collector fader; Send 2 level alone sets the amount)',unconfirmed:'mode UNCONFIRMED: test pre and post and record both',other:'other host-supported mode (name it in the notes)'};
+const MD={post:'POST-fader',pre:'PRE-fader',unconfirmed:'mode UNCONFIRMED: test pre and post and record both',other:'other host-supported mode (name it in the notes)'};
+function altSteps(c){const a=c.alt,b=c.buses,s=[];
+ s.push('Source ('+a.source+'): normal output → '+(a.sourceOut==='mix'?'Stereo Out / mix (stays audible).':a.sourceOut==='bus'?'an audible bus (stays audible).':'NO OUTPUT (not intended).'));
+ s.push('Send 1: '+a.source+' → Bus '+b.collector+' at '+LV[a.srcLevel]+', '+MD[a.srcMode]+'. This is the SOURCE send gain.');
+ s.push('Collector aux (Bus '+b.collector+'): main output '+(a.collOut==='noout'?'NO OUTPUT':'AUDIBLE')+'. Insert '+(a.effect==='none'?'no effect':(a.effectName||a.effect)+(['reverb','delay'].includes(a.effect)?' at 100% wet':''))+' → ANUBIS (after the effect) for wet-signal ducking. Collector fader: '+LV[a.collFader]+'. This is the collector aux FADER gain, separate from Send 1.');
+ s.push('ANUBIS on the collector (measured in Logic 12.2, 21 Nov 2026): Side Chain = the DRY source (tested: the source audio track; a detector bus carrying the dry source also works), DUCK ON, KEY OFF, Range -19.8 dB. Result: the wet return ducks about -19.8 to -20.3 dB while the dry source plays, reaching full depth within about 20 ms, and recovers to about 0 dB in gaps of 0.5 s or more. Threshold was left at -80.0 dB; Attack 1.6, Release 48.5. The key does not depend on Send 2 level, an Aux 5 mute, or the source track main output, so the return never keys ANUBIS.');
+ s.push(a.sendOn==='yes'?'Send 2 (the separate aux send that dictates the audible amount): Bus '+b.collector+' → Bus '+b.altdest+' at '+LV[a.retLevel]+', '+RMD[a.retMode]+'. A No Output main output does not switch this send off: delivery from a No Output collector was proven in Logic 12.2 on 21 Nov 2026 (turn the send power OFF to silence the return; the send must be switched on, not just present).':'Send 2: NOT configured. Nothing audible will leave the collector.');
+ s.push('Destination return aux (input Bus '+b.altdest+'): output '+(a.retOut==='mix'?'Stereo Out / mix (audible).':'NO OUTPUT (the return would be silent).'));
+ if(a.detPlugin!=='none')s.push('Detector for '+(a.detPlugin==='both'?'ANUBIS and TEHUTI':a.detPlugin)+': Side Chain menu = Bus '+(a.detSource==='collector'?b.collector+' (collector)':b.vocal+' (detector)')+'. This stays independent of the audible return: the return bus must never be a key.');
+ s.push('Check: source audible, no doubled dry signal, reverb tail audible and recovering between phrases, then save, reopen and offline bounce.');
+ return s}
+function verification(c){const v=['Bypass each processor and prove the target is audible first. For a wet return, verify its meter and tail before enabling ducking.','Confirm the key reaches the plugin: the Side Chain menu shows the bus and a key/no-key level test changes the output. A No Output aux is acceptable only if that works.','Prove a no-key state by removing the send or bypassing the plugin, not only by choosing "Side Chain: None".','Never set a wet reverb/delay return, an instrument monitoring path or a mastering output to No Output.','Check source continuity, no doubled source, pre/post-fader behavior, mute/solo and feedback.','Compare bypass, no key, key active and key gap at matched level; measure active and gap passages, not an average.','Check mono and stereo, automation, bounce and project recall.','Record the plugin build, Logic version, whether the AU sidechain input responded, send modes, levels, bounce and recall in the test record.'];
+ if(c.workflow==='chain')v.push('Chain: TEHUTI must show key-driven reduction by itself; ANUBIS gain reduction must not hide a TEHUTI key failure.');
+ if(c.workflow==='altcollector')v.push('Alternate collector: prove the separate send delivers from a No Output aux; compare pre and post collector send modes; report the limitation if it does not deliver.');
+ return v}
+function checklistFor(c){const t=[['Audible program with the sidechain processor bypassed','pass/fail'],['Key bus signal present and not audible in the mix','pass/fail'],['Plugin receives the selected key (key/no-key level test)','pass/fail'],['Key-active and key-gap levels measured','levels'],['Mono / stereo, bounce, reopen / recall','pass/fail']];
+ if(c.workflow==='chain')t.unshift(['TEHUTI alone, then ANUBIS alone, then both, matched level','pass/fail']);
+ if(['wet','delay'].includes(c.workflow))t.unshift(['Wet return audible with ANUBIS bypassed','pass/fail']);
+ if(c.workflow==='altcollector')return [['Source track remains audible','pass/fail · ANUBIS-route measured PASS 21 Nov 2026'],['Collector send at unity, collector main output No Output','setup · verified 21 Nov 2026'],['Separate collector send delivers to the destination aux','pass/fail · measured PASS 21 Nov 2026'],['Pre-fader and post-fader collector send modes compared','observations · done: default Post Pan follows the fader, Pre ignores it'],['Destination aux produces audible output','pass/fail · measured PASS 21 Nov 2026'],['Reverb tail audible and recovering between phrases','pass/fail · measured PASS 21 Nov 2026'],['No doubled dry signal','pass/fail · measured PASS 21 Nov 2026'],['ANUBIS / TEHUTI detector routing independent of the audible return','pass/fail · ANUBIS measured PASS; TEHUTI not yet tested in Mode C'],['Same result after save / reopen','pass/fail · ANUBIS settings persisted 21 Nov 2026'],['Same result in an offline bounce','pass/fail · offline and realtime compared 21 Nov 2026']];
+ return t}
+function diagram(c){
+ const box=(x,y,w,l,d)=>'<rect x="'+x+'" y="'+y+'" width="'+w+'" height="52" rx="7" fill="#273747" stroke="#d4b679"/><text x="'+(x+9)+'" y="'+(y+20)+'" fill="white" font-size="12">'+esc(l)+'</text><text x="'+(x+9)+'" y="'+(y+38)+'" fill="#d2dce2" font-size="10.5">'+esc(d)+'</text>';
+ const line=(x,y,xx,yy,dash)=>'<path d="M'+x+' '+y+'L'+xx+' '+yy+'" stroke="#e9c581" stroke-width="2" '+(dash?'stroke-dasharray="6 5"':'')+' marker-end="url(#arrow)"/>';
+ const head=h=>'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 '+h+'" role="img" aria-label="Routing diagram"><defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4" orient="auto"><path d="M0 0L8 4L0 8" fill="none" stroke="#e9c581"/></marker></defs>';
+ if(c.workflow==='altcollector'){const a=c.alt,b=c.buses;let s=head(330);
+  s+=box(8,24,190,'SOURCE: '+a.source.slice(0,22),'normal out → '+(a.sourceOut==='mix'?'MIX (audible)':a.sourceOut));
+  s+=box(8,110,190,'SEND 1 (source gain)',LV[a.srcLevel]+' · '+(a.srcMode==='post'?'post':'pre'));
+  s+=box(250,110,210,'COLLECTOR AUX · Bus '+b.collector,'main out: '+(a.collOut==='noout'?'NO OUTPUT':'audible')+' · fader '+(a.collFader==='unity'?'0 dB ref':'by ear'));
+  s+=box(250,196,210,'EFFECT INSERT → ANUBIS',a.effect==='none'?'none':(a.effectName||a.effect));
+  s+=box(520,110,190,'SEND 2 (collector → return)',a.sendOn==='yes'?'Bus '+b.collector+' → Bus '+b.altdest+' · '+(a.retMode==='unconfirmed'?'mode ?':a.retMode):'NOT CONFIGURED');
+  s+=box(520,196,190,'DESTINATION BUS '+b.altdest,'no direct audio out');
+  s+=box(770,110,200,'AUDIBLE RETURN AUX','input Bus '+b.altdest);
+  s+=box(770,196,200,'MIX OUTPUT',a.retOut==='mix'?'audible':'NO OUTPUT (silent)');
+  s+=line(103,76,103,110,false)+line(198,136,250,136,false)+line(460,136,520,136,false)+line(710,136,770,136,false)+line(870,162,870,196,false)+line(355,162,355,196,false)+line(615,162,615,196,false);
+  if(a.detPlugin!=='none')s+=box(250,262,330,'SIDECHAIN: '+(a.detPlugin==='both'?'ANUBIS / TEHUTI':a.detPlugin),'key = Bus '+(a.detSource==='collector'?b.collector+' (collector)':b.vocal+' (detector)'))+line(250,288,198,288,true);
+  s+='<text x="10" y="320" fill="#d2dce2" font-size="11">Send gain (Send 1, Send 2) and aux fader gain are separate controls. Static plan only.</text>';
+  return s+'</svg>'}
+ const active=c.plugins.filter(p=>p.enabled);if(!active.length)return '<p>Enable a module to see its paths.</p>';
+ const chain=c.workflow==='chain'&&active.some(p=>p.name==='TEHUTI')&&active.some(p=>p.name==='ANUBIS');
+ const rows=chain?[{label:'TEHUTI → ANUBIS',p:active.find(p=>p.name==='TEHUTI'),chain:true}].concat(active.filter(p=>!['TEHUTI','ANUBIS'].includes(p.name)).map(p=>({label:p.name,p}))):active.map(p=>({label:p.name,p}));
+ let s=head(rows.length*150+35);
+ rows.forEach((r,i)=>{const p=r.p,y=i*150+12,wet=['reverb','delay'].includes(p.target);
+  s+='<text x="10" y="'+(y+12)+'" fill="#edc67e" font-size="13">'+esc(r.label)+'</text>';
+  s+=box(10,y+22,225,'AUDIBLE SOURCE',p.source+' → normal output');
+  s+=box(285,y+22,300,r.chain?'TEHUTI → ANUBIS on '+p.target:(wet?'WET EFFECT → '+p.name:p.name+' on '+p.target),r.chain?'Bus '+c.buses[p.target]+' · TEHUTI first':(wet?'100% wet · separate send':'Bus '+c.buses[p.target]+' target'));
+  s+=box(660,y+22,225,'AUDIBLE OUTPUT',wet?'Return Bus '+c.buses[p.target]+' → Mix':'Target → Mix');
+  s+=line(235,y+48,285,y+48,false)+line(585,y+48,660,y+48,false);
+  s+=box(10,y+88,225,'DETECTOR (send '+(c.feed.sendPoint==='post'?'post':'pre')+')',p.source+' → Bus '+c.buses[p.source]);
+  s+=box(285,y+88,300,'EXTERNAL INPUT',p.type==='capture'?'capture / instrument input':'Side Chain menu · verify in host');
+  s+=line(235,y+114,285,y+114,true);
+  s+='<text x="660" y="'+(y+110)+'" fill="#d2dce2" font-size="11">'+(c.feed.collectorOut==='noout'?'Key aux: No Output (host check)':'Key aux: audible (monitoring)')+'</text>';
+  if(wet)s+='<text x="660" y="'+(y+126)+'" fill="#ffbd95" font-size="11">Wet return MUST remain audible</text>';});
+ return s+'</svg>'}
+function stepsForConfig(c){const act=n=>c.plugins.some(p=>p.name===n&&p.enabled);
+ if(c.workflow==='altcollector'){const g=[{title:'Alternate Unity Collector → Separate Return',steps:altSteps(c)}];return g.concat(c.plugins.filter(p=>p.enabled&&c.alt.detPlugin!=='none'&&(c.alt.detPlugin==='both'||c.alt.detPlugin===p.name)).map(p=>({title:p.name+' (detector)',steps:['Side Chain = Bus '+(c.alt.detSource==='collector'?c.buses.collector:c.buses.vocal)+'; keep it independent of the audible return.','Test bypass / no key / key active / key gap and record the levels.']})))}
+ if(c.workflow==='chain'&&act('TEHUTI')&&act('ANUBIS')){const rest=c.plugins.filter(p=>p.enabled&&!['TEHUTI','ANUBIS'].includes(p.name));return [{title:'TEHUTI → ANUBIS on Bus '+c.buses.vocal,steps:chainSteps(c)}].concat(rest.map(p=>({title:p.name,steps:stepsFor(p,c)})))}
+ if(c.workflow==='anubisonly'&&act('ANUBIS')){const rest=c.plugins.filter(p=>p.enabled&&p.name!=='ANUBIS');return [{title:'ANUBIS-only Music Bus Duck',steps:anubisOnlySteps(c)}].concat(rest.map(p=>({title:p.name,steps:stepsFor(p,c)})))}
+ return c.plugins.filter(p=>p.enabled).map(p=>({title:p.name,steps:stepsFor(p,c)}))}
+function normalizeImport(raw){const c=defaultConfig();
+ if(!raw||typeof raw!=='object')throw Error('Unsupported profile');
+ if(![FORMAT].concat(OLD_FORMATS).includes(raw.format)||!raw.buses||typeof raw.buses!=='object'||!Array.isArray(raw.plugins)||![8,9].includes(raw.plugins.length))throw Error('Unsupported profile');
+ for(const [id,,,def] of BUS_ROLES){const n=raw.buses[id]!==undefined?raw.buses[id]:(OPTIONAL_ROLES.includes(id)?def:null);if(!Number.isInteger(n)||n<1||n>256)throw Error('Invalid bus '+id);c.buses[id]=n}
+ const T=new Set(BUS_ROLES.filter(r=>r[2]==='target'||r[2]==='return').map(r=>r[0]).concat(['capture','reference'])),S=new Set(['vocal','kick','music','drums','bass','impact','fx','reference','capture','none']);
+ for(const p of c.plugins){const q=raw.plugins.find(x=>x&&x.name===p.name);if(!q){if(p.name==='NTRPL'){p.enabled=false;continue}throw Error('Missing '+p.name)}
+  if(q.type!==p.type||!T.has(q.target)||!S.has(q.source)||typeof q.enabled!=='boolean')throw Error('Invalid module '+p.name);p.target=q.target;p.source=q.source;p.enabled=q.enabled}
+ c.workflow=WORKFLOWS.includes(raw.workflow)?raw.workflow:'standard';
+ if(['user-set','low','medium','high'].includes(raw.wetSend))c.wetSend=raw.wetSend;
+ if(raw.feed&&typeof raw.feed==='object'){if(['full','adjustable'].includes(raw.feed.mode))c.feed.mode=raw.feed.mode;if(['post','pre'].includes(raw.feed.sendPoint))c.feed.sendPoint=raw.feed.sendPoint;if(['noout','audible'].includes(raw.feed.collectorOut))c.feed.collectorOut=raw.feed.collectorOut}
+ if(raw.alt&&typeof raw.alt==='object'){const A=c.alt,r=raw.alt,pick=(k,list)=>{if(list.includes(r[k]))A[k]=r[k]};
+  pick('sourceOut',['mix','bus','noout']);pick('srcLevel',['unity','bylogic']);pick('srcMode',['post','pre']);pick('collOut',['noout','audible']);pick('collFader',['unity','byear']);pick('effect',['reverb','delay','other','none']);pick('sendOn',['yes','no']);pick('retLevel',['unity','byear']);pick('retMode',['postpan','unconfirmed','post','pre','other']);pick('retOut',['mix','noout']);pick('detPlugin',['none','ANUBIS','TEHUTI','both']);pick('detSource',['detector','collector']);
+  if(typeof r.source==='string'&&r.source.length<80)A.source=r.source;if(typeof r.effectName==='string'&&r.effectName.length<80)A.effectName=r.effectName}
+ if(raw.testRecord&&typeof raw.testRecord==='object'){for(const [k] of TEST_FIELDS)if(typeof raw.testRecord[k]==='string'&&raw.testRecord[k].length<200)c.testRecord[k]=raw.testRecord[k];if(typeof raw.testRecord.notes==='string'&&raw.testRecord.notes.length<400)c.testRecord.notes=raw.testRecord.notes}
+ return c}
+function exportText(c){const L=['DIH WORLD AUDIO — NINE PLUGIN ROUTING (v4) — STATIC PLAN, NOT LOGIC VERIFIED','Workflow: '+c.workflow,'A No Output detector or collector aux works only if the plugin / separate send still receives the signal in Logic; audible targets and returns MUST output to the mix.'];
+ for(const g of stepsForConfig(c))L.push('\n'+g.title+'\n'+g.steps.map((x,i)=>(i+1)+'. '+x).join('\n'));
+ if(c.workflow==='altcollector')L.push('\nMODE C MEASURED IN LOGIC PRO 12.2 (21 NOV 2026, ANUBIS route; see CLAUDE_MODEC_FULL_TESTS_20261121.md)','- Return off: bounce equals the dry source bit-exactly; return carries no dry signal.','- No Output collector delivers through Send 2; destination aux audible.','- Send 2 default is Post Pan and follows the collector fader; Pre Fader ignores it.','- ANUBIS (Side Chain = dry source, Duck ON, Range -19.8 dB): about -19.8 to -20.3 dB duck on the wet return, full depth within about 20 ms, recovery to about 0 dB in gaps of 0.5 s or more.','- Detector independent of Send 2 level, return mute and source main output; settings persist after reopen; realtime matches offline within 0.5 dB.','- SacredVerb Reverb Duck: set 0.00 (shipped default 50.00; default change pending next canon build).','- Not yet tested in Mode C: TEHUTI, LookOut, SILVER, mono, other effects, other Logic versions.');
+ L.push('\nTEST CHECKLIST');for(const [t,k] of checklistFor(c))L.push('- '+t+' ['+k+']');
+ L.push('\nTEST RECORD');for(const [k,label] of TEST_FIELDS)L.push(label+': '+(c.testRecord[k]||'(blank)'));L.push('Notes: '+(c.testRecord.notes||'(blank)'));
+ return L.join('\n')}
+if(typeof module!=='undefined')module.exports={defaultConfig,applyWorkflow,validate,stepsFor,chainSteps,anubisOnlySteps,altSteps,stepsForConfig,diagram,normalizeImport,exportText,feedLines,verification,checklistFor,HELP,NOTES,PLUGINS,BUS_ROLES,WORKFLOWS,FORMAT,TEST_FIELDS};
+
+if(typeof document!=='undefined'){(function(){
+const $=id=>document.getElementById(id);
+const JEB_AVAILABLE=typeof window!=='undefined'&&'speechSynthesis' in window&&typeof SpeechSynthesisUtterance!=='undefined';
+const jebStatus=$('jebStatus'),jebSection=$('jebSection'),jebVoice=$('jebVoice'),jebRate=$('jebRate'),jebRateValue=$('jebRateValue');
+const jebRead=$('jebRead'),jebPause=$('jebPause'),jebResume=$('jebResume'),jebStop=$('jebStop');
+const jebAvatar=document.createElement('button');jebAvatar.type='button';jebAvatar.className='jeb-avatar';jebAvatar.title='Jeb is reading this section';jebAvatar.setAttribute&&jebAvatar.setAttribute('aria-label','Jeb guide avatar');
+let jebCurrent=null;
+function jebSetStatus(s){if(jebStatus)jebStatus.textContent=s}
+function jebText(section){const copy=section.cloneNode(true);copy.querySelectorAll&&copy.querySelectorAll('.jeb-controls,.jeb-read,.jeb-avatar,button,input,select,output').forEach(n=>n.remove());return (copy.innerText||copy.textContent||'').replace(/\s+/g,' ').trim()}
+function jebMove(section){if(!section)return;if(jebCurrent&&jebCurrent.classList)jebCurrent.classList.remove('jeb-listening');jebCurrent=section;if(section.classList)section.classList.add('jeb-listening');if(section.appendChild)section.appendChild(jebAvatar);if(section.scrollIntoView)section.scrollIntoView({behavior:'smooth',block:'start'})}
+function jebPopulateVoices(){if(!JEB_AVAILABLE)return;const selected=jebVoice.value;jebVoice.innerHTML='<option value="">System default voice</option>';window.speechSynthesis.getVoices().forEach(v=>{const o=document.createElement('option');o.value=v.name;o.textContent=v.name+(v.lang?' ('+v.lang+')':'');if(v.name===selected)o.selected=true;jebVoice.appendChild(o)})}
+function jebSpeak(section){if(!section)return;jebMove(section);if(!JEB_AVAILABLE){jebSetStatus('Speech synthesis is unavailable in this browser. The routing guide remains readable on screen.');return}window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(jebText(section)),voiceName=jebVoice.value,voice=window.speechSynthesis.getVoices().find(v=>v.name===voiceName);if(voice)u.voice=voice;u.rate=Number(jebRate.value)||0.8;u.onstart=()=>jebSetStatus('Jeb is reading: '+(section.dataset.jebLabel||'selected section')+'.');u.onend=()=>jebSetStatus('Jeb finished reading: '+(section.dataset.jebLabel||'selected section')+'.');u.onerror=()=>jebSetStatus('Jeb could not start speech in this browser.');window.speechSynthesis.speak(u)}
+if(jebRate){jebRate.addEventListener('input',()=>{jebRateValue.textContent=Number(jebRate.value).toFixed(2)+'x'})}
+if(jebRead)jebRead.addEventListener('click',()=>jebSpeak($(jebSection.value)));
+if(jebPause)jebPause.addEventListener('click',()=>{if(JEB_AVAILABLE){window.speechSynthesis.pause();jebSetStatus('Jeb is paused.')}});
+if(jebResume)jebResume.addEventListener('click',()=>{if(JEB_AVAILABLE){window.speechSynthesis.resume();jebSetStatus('Jeb resumed.')}});
+if(jebStop)jebStop.addEventListener('click',()=>{if(JEB_AVAILABLE){window.speechSynthesis.cancel();jebSetStatus('Jeb stopped.')}});
+if(JEB_AVAILABLE){jebPopulateVoices();window.speechSynthesis.onvoiceschanged=jebPopulateVoices}else{jebSetStatus('Speech synthesis is unavailable in this browser. The routing guide remains readable on screen.')}
+document.querySelectorAll('section[data-jeb-label]').forEach(section=>{const b=document.createElement('button');b.type='button';b.className='jeb-read';b.textContent='Have Jeb read this section';b.addEventListener('click',()=>jebSpeak(section));section.appendChild(b)});
+const ALT_IDS=[['source','alt_source'],['sourceOut','alt_sourceOut'],['srcLevel','alt_srcLevel'],['srcMode','alt_srcMode'],['collOut','alt_collOut'],['collFader','alt_collFader'],['effect','alt_effect'],['effectName','alt_effectName'],['sendOn','alt_sendOn'],['retLevel','alt_retLevel'],['retMode','alt_retMode'],['retOut','alt_retOut'],['detPlugin','alt_detPlugin'],['detSource','alt_detSource']];
+$('buses').innerHTML=BUS_ROLES.map(([id,label,kind,n])=>'<label>'+esc(label)+' <small>('+kind+')</small><input id="b_'+id+'" type="number" min="1" max="256" value="'+n+'"></label>').join('');
+const targets=BUS_ROLES.filter(r=>r[2]==='target'||r[2]==='return').map(r=>r[0]).concat(['capture']),sources=['vocal','kick','music','drums','bass','impact','fx','reference','capture','none'];
+const opts=(a,v)=>a.map(x=>'<option value="'+x+'"'+(x===v?' selected':'')+'>'+x+'</option>').join('');
+$('processors').innerHTML=PLUGINS.map((p,i)=>'<tr><td><strong>'+esc(p.name)+'</strong><div><small>'+esc(p.purpose)+'</small></div></td><td><select id="target_'+i+'">'+opts(targets,p.target)+'</select></td><td><select id="source_'+i+'">'+opts(sources,p.source)+'</select></td><td><input type="checkbox" id="enabled_'+i+'"'+(p.on?' checked':'')+'></td></tr>').join('');
+$('testrec').innerHTML=TEST_FIELDS.map(([k,l,t])=>'<label>'+esc(l)+(t.startsWith('sel:')?'<select id="tr_'+k+'">'+t.slice(4).split(',').map(o=>'<option>'+o+'</option>').join('')+'</select>':'<input type="text" id="tr_'+k+'">')+'</label>').join('');
+$('helptable').innerHTML=PLUGINS.map(p=>{const h=HELP[p.name];return '<tr><td><strong>'+esc(p.name)+'</strong></td><td>'+esc(h.behavior)+'</td><td>'+esc(h.distinct)+'</td><td>'+h.status.map(([k,t])=>'<span class="tag '+k+'">'+(k==='src'?'source':k==='host'?'host':'pending')+'</span>'+esc(t)).join('<br>')+'</td></tr>'}).join('');
+$('notesbody').innerHTML='<ul>'+NOTES.map(n=>'<li>'+esc(n)+'</li>').join('')+'</ul>';
+function getConfig(){const c=defaultConfig();c.workflow=$('workflow').value;c.wetSend=$('wetSend').value;c.feed={mode:$('feedMode').value,sendPoint:$('sendPoint').value,collectorOut:$('collectorOut').value};
+ for(const [id] of BUS_ROLES)c.buses[id]=Number($('b_'+id).value);
+ for(const [k,id] of ALT_IDS)c.alt[k]=$(id).value;
+ c.plugins=PLUGINS.map((p,i)=>({name:p.name,type:p.type,target:$('target_'+i).value,source:$('source_'+i).value,enabled:$('enabled_'+i).checked}));
+ c.testRecord={};for(const [k] of TEST_FIELDS)c.testRecord[k]=$('tr_'+k).value;c.testRecord.notes=$('tr_notes').value;return c}
+function setConfig(c){$('workflow').value=c.workflow;$('wetSend').value=c.wetSend;$('feedMode').value=c.feed.mode;$('sendPoint').value=c.feed.sendPoint;$('collectorOut').value=c.feed.collectorOut;for(const [id] of BUS_ROLES)$('b_'+id).value=c.buses[id];for(const [k,id] of ALT_IDS)$(id).value=c.alt[k];c.plugins.forEach((p,i)=>{$('target_'+i).value=p.target;$('source_'+i).value=p.source;$('enabled_'+i).checked=p.enabled});for(const [k] of TEST_FIELDS)if(c.testRecord[k]!==undefined)$('tr_'+k).value=c.testRecord[k];if(c.testRecord.notes!==undefined)$('tr_notes').value=c.testRecord.notes}
+function render(){const c=getConfig(),r=validate(c);let h='';
+ $('altsec').style.display=c.workflow==='altcollector'?'':'none';
+ h+=r.errors.length?'<p class="bad"><strong>BLOCKING:</strong> '+r.errors.map(esc).join(' | ')+'</p>':'<p class="good">Static topology checks passed. This is NOT live Logic verification.</p>';
+ if(r.warnings.length)h+='<p class="warn"><strong>Topology warnings:</strong> '+r.warnings.map(esc).join(' | ')+'</p>';
+ if(r.info.length)h+='<p class="info"><strong>Notes:</strong> '+r.info.map(esc).join(' | ')+'</p>';
+ h+='<p class="warn"><strong>Host-dependent checks (verify in Logic; not failures):</strong></p><ul class="warn">'+r.hostChecks.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>';
+ $('validation').innerHTML=h;$('diagram').innerHTML=diagram(c);
+ $('instructions').innerHTML=stepsForConfig(c).map(g=>'<li><strong>'+esc(g.title)+'</strong><ol>'+g.steps.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ol></li>').join('')||'<li>Enable a plugin to generate instructions.</li>';
+ $('verification').innerHTML=verification(c).map(x=>'<li>'+esc(x)+'</li>').join('')+'<li><strong>Checklist for this workflow:</strong><ul>'+checklistFor(c).map(([t,k])=>'<li>'+esc(t)+' <small>['+esc(k)+']</small></li>').join('')+'</ul></li>';
+ return {c,r}}
+function download(name,content,mime){const url=URL.createObjectURL(new Blob([content],{type:mime})),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+$('json').onclick=()=>{const {c,r}=render();if(!r.errors.length)download('DIH_Nine_Plugin_Routing_v5.json',JSON.stringify(c,null,2),'application/json')};
+$('txt').onclick=()=>{const {c,r}=render();if(!r.errors.length)download('DIH_Nine_Plugin_Logic_Routing_v5.txt',exportText(c),'text/plain')};
+$('print').onclick=()=>window.print();
+$('import').onchange=async e=>{try{const f=e.target.files[0];if(!f||f.size>100000)throw Error('Invalid file');setConfig(normalizeImport(JSON.parse(await f.text())));render()}catch(ex){$('validation').innerHTML='<p class="bad">Import rejected: '+esc(ex.message)+'</p>'}finally{e.target.value=''}};
+$('workflow').addEventListener('change',()=>{const c=getConfig();applyWorkflow(c,$('workflow').value);setConfig(c);render()});
+$('loadChain').onclick=()=>{const c=defaultConfig();applyWorkflow(c,'chain');setConfig(c);render()};
+$('loadAnubisOnly').onclick=()=>{const c=defaultConfig();applyWorkflow(c,'anubisonly');setConfig(c);render()};
+$('loadAlt').onclick=()=>{const c=defaultConfig();applyWorkflow(c,'altcollector');c.plugins.find(p=>p.name==='TEHUTI').enabled=false;setConfig(c);render()};
+document.querySelectorAll('input,select').forEach(el=>{if(el.id!=='import'&&el.id!=='workflow')el.addEventListener('change',render)});
+setConfig(applyWorkflow(defaultConfig(),'chain'));render();
+})()}
+</script>
+</body>
+</html>
