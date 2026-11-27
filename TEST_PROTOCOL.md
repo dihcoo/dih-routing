@@ -76,6 +76,12 @@ This is a status of evidence already present in the owner-maintained Routing Tes
 | SILVER | Verified reference-on renders D/E exist; the earlier C render is invalid because the UI toggle did not change state. | Reference matching is not a detector sidechain. Compare valid reference-on renders with a matched reference-off baseline before claiming matching behavior. |
 | NTRPL | Offline AU host showed about 1.4 dB reduction during kicks and a 0.5 dB increase between them; the no-sidechain control was unchanged. | Response is modest and not isolated to a layer in Logic. Keep detector behavior unverified until a layer-only, matched key/no-key Logic test passes. |
 
+### NTRPL candidate Logic bounces (26 Nov; exploratory only)
+
+Three archived 48 kHz stereo WAV pairs were compared by full-file RMS, waveform correlation, and 0.5-second RMS windows. The sidechain-on/off pairs changed full-file RMS by approximately 0.000 dB (`SETUP 1 BOTH TRACKS`), -0.003 dB (`BASS NO OUT`), and +0.001 dB (`TRACK 2 WITH BASS`). Correlations were 0.999836, 0.995827, and 0.999823 respectively. The `BASS NO OUT` pair varied by -0.704 to +0.839 dB across windows; the other two stayed within -0.141 to +0.046 dB.
+
+The archive has no setup record tying these files to the NTRPL build, isolated output layer, or key-active/gap timing. These measurements therefore do not establish detector response; keep NTRPL unverified pending a documented, layer-only Logic test with matched key-on/key-off and active/gap renders.
+
 ### Evidence gate for guide claims
 
 Label behavior **Logic-verified** only when the installed build and host are recorded, the audible program and detector paths are separate, the no-key control removes the send (not just Side Chain `None`), and matched active/gap renders demonstrate the expected response. Save/reopen recall and no-key silence must also be checked. Keep offline-engine results labeled **offline-only**; do not use them alone to claim Logic routing works. The archive reviewed for this snapshot is not shipped with this repository, so retain its bounces, measurements, and screenshots alongside future test records.
