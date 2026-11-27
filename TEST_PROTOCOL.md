@@ -66,7 +66,7 @@ This is a status of evidence already present in the owner-maintained Routing Tes
 | Module | Evidence on file | Routing-guide status / remaining proof |
 |---|---|---|
 | ANUBIS | Logic 12.2, installed 1.0.12: a Bus 32 vocal key produced 51–63% KEY while active and 0% in gaps; Side Chain None was idle after the guard. | Key reception is observed in Logic. Keep KEY and DUCK as distinct controls; capture matched key-only, duck-only, and combined active/gap bounces before publishing numeric behavior. |
-| TEHUTI | Logic 12.2, 1.0.7: Bus 32 key changed the tested ducking preset by about 2.04 dB in active windows and about 0.06 dB in gaps versus no-key; mono, silence, and post-fix None controls passed. | Logic-tested for this build, preset, source, and routing. Do not generalize to other presets/builds or unsupported modes. |
+| TEHUTI | Logic 12.2, 1.0.7: Bus 32 key changed the tested ducking preset by about 2.04 dB in active windows and about 0.06 dB in gaps versus no-key; mono, silence, and post-fix None controls passed. | Logic-tested for this build, preset, source, and routing. Do not generalize to other presets/builds or untested topologies. |
 | DrumKrushGlue | Offline AU host with distinct kick key: about 0.4 dB reduction during kicks and 0.3 dB between; no-sidechain control was unchanged. | Engine response observed but small. A matched Logic key/no-key bounce is still needed to verify host mapping and generated-layer behavior. |
 | MARIANA | Offline AU host: about 3.3 dB reduction during kicks and 2.8 dB between; no-sidechain control was unchanged. | Engine response observed. Logic confirmed post-guard None is idle, but a post-guard real-key bounce is still needed. |
 | MONOLITH | Offline AU host: about 3.7 dB reduction during kicks and 3.1 dB between; no-sidechain control was unchanged. | Engine response observed. Logic confirmed post-guard None is idle, but a post-guard real-key bounce is still needed. |
@@ -82,6 +82,14 @@ Three archived 48 kHz stereo WAV pairs were compared by full-file RMS, waveform 
 
 The archive has no setup record tying these files to the NTRPL build, isolated output layer, or key-active/gap timing. These measurements therefore do not establish detector response; keep NTRPL unverified pending a documented, layer-only Logic test with matched key-on/key-off and active/gap renders.
 
+### Archived 7-plugin pair re-analysis (27 Nov; exploratory only)
+
+Re-measured the 20 Nov 48 kHz stereo WAVs with matched-duration RMS and waveform correlation. Key-on minus key-off full-file RMS was DrumKrushGlue -1.041 dB (correlation 0.9841), MARIANA -0.719 dB (0.9973), MONOLITH -0.714 dB (0.9974), and LookOut -1.790 dB (0.9375). In 0.25-second windows, the median delta was 0 dB for each pair, with negative changes concentrated in some windows.
+
+These are measurable differences between archived files, not proof that the named processor caused them: the 7-plugin session does not provide an isolated output layer, and available records do not establish matched active/gap windows or exclude other chain state. Keep them exploratory; they do not close the Logic-host test requirement for those modules.
+
 ### Evidence gate for guide claims
 
 Label behavior **Logic-verified** only when the installed build and host are recorded, the audible program and detector paths are separate, the no-key control removes the send (not just Side Chain `None`), and matched active/gap renders demonstrate the expected response. Save/reopen recall and no-key silence must also be checked. Keep offline-engine results labeled **offline-only**; do not use them alone to claim Logic routing works. The archive reviewed for this snapshot is not shipped with this repository, so retain its bounces, measurements, and screenshots alongside future test records.
+
+The routing registry's `modes` arrays are planner candidates, not verified support or a complete applicability matrix. A pairing absent from the candidate list is unverified unless evidence makes it explicitly inapplicable. Drum Morpher capture and SILVER reference analysis are separate workflows, not A/B/C plugin modes. Do not count unlisted combinations as required plugin tests or invent mode-specific claims.

@@ -53,26 +53,23 @@ test('configurator keeps detector, reference, capture, and optional SacredVerb i
   assert.equal(sandbox.classifyInput('Drum Morpher', 'capture'), 'capture');
 });
 
-test('router workflow validation covers all 30 module/mode combinations', () => {
+test('router validates only planner-listed topology candidates', () => {
   const router = loadRouterInterface();
-  let combinations = 0;
   for (const moduleRecord of registry.modules) {
-    for (const mode of ['A', 'B', 'C']) {
+    for (const mode of moduleRecord.modes) {
       const config = router.defaultConfig();
       config.plugins.forEach(plugin => { plugin.enabled = plugin.name === moduleRecord.name; });
       config.workflow = mode === 'A' ? 'standard' : mode === 'B' ? 'wet' : 'altcollector';
       config.alt.processor = moduleRecord.name;
       const errors = router.validate(config).errors.join('\n');
-      assert.equal(/not registry-supported for routing mode/.test(errors), !moduleRecord.modes.includes(mode), `${moduleRecord.name} / ${mode}`);
+      assert.doesNotMatch(errors, /not listed as a candidate/);
       assert.equal(config.plugins.find(plugin => plugin.name === moduleRecord.name).enabled, true);
       assert.equal(config.alt.processor, moduleRecord.name);
-      combinations++;
     }
   }
-  assert.equal(combinations, 30);
 });
 
-test('router retains explicit SacredVerb selection and surfaces incompatible mode', () => {
+test('router retains an unlisted pairing and labels compatibility unverified', () => {
   const router = loadRouterInterface();
   const config = router.defaultConfig();
   const sacredVerb = config.plugins.find(plugin => plugin.name === 'SacredVerb');
@@ -80,7 +77,22 @@ test('router retains explicit SacredVerb selection and surfaces incompatible mod
   config.workflow = 'standard';
   const result = router.validate(config);
   assert.equal(sacredVerb.enabled, true);
-  assert.match(result.errors.join('\n'), /SacredVerb is not registry-supported for routing mode A/);
+  assert.match(result.errors.join('\n'), /SacredVerb is not listed as a candidate for routing mode A; compatibility is unverified, not necessarily impossible/);
+  assert.equal(config.plugins.find(plugin => plugin.name === 'SacredVerb').name, 'SacredVerb');
+});
+
+test('router keeps reference and capture as separate workflows', () => {
+  const router = loadRouterInterface();
+  for (const [name, workflow] of [['Drum Morpher', 'capture'], ['SILVER', 'reference']]) {
+    const config = router.defaultConfig();
+    config.plugins.forEach(plugin => { plugin.enabled = plugin.name === name; });
+    config.workflow = workflow;
+    const result = router.validate(config);
+    assert.doesNotMatch(result.errors.join('\n'), /not mapped to routing modes A, B, or C/);
+    assert.equal(config.plugins.find(plugin => plugin.name === name).enabled, true);
+    assert.equal(result.hostChecks.some(message => message.includes(name)), true);
+    assert.equal(result.hostChecks.some(message => message.includes('Side Chain: None')), false);
+  }
 });
 
 test('Mode C diagram, plans, and save/restore preserve its selected module and collector topology', () => {

@@ -26,12 +26,15 @@
     const name = resolveModule(selectedModule, recommendedModule);
     const moduleRecord = registry.modules.find(module => module.name === name);
     const valid = moduleRecord.modes.includes(mode);
+    const modeMessage = moduleRecord.modes.length === 0
+      ? `${name} is a separate workflow and is not mapped to routing modes A, B, or C. ${moduleRecord.modeNote} Selection retained.`
+      : `${name} is not listed as a candidate for routing mode ${String(mode)}; compatibility is unverified, not necessarily impossible. Selection retained. Planner candidates: ${moduleRecord.modes.join(', ')}.`;
     return Object.freeze({
       module: name,
       moduleRecord,
       mode,
       valid,
-      errors: valid ? [] : [`${name} is not registry-supported for routing mode ${String(mode)}. Selection retained. Supported modes: ${moduleRecord.modes.join(', ')}.`]
+      errors: valid ? [] : [modeMessage]
     });
   }
 
@@ -51,7 +54,10 @@
       const moduleRecord = registry.modules.find(module => module.name === topology.module);
       if (!moduleRecord) errors.push(`Unknown routing module: ${String(topology.module)}`);
       else if (['A', 'B', 'C'].includes(mode) && !moduleRecord.modes.includes(mode)) {
-        errors.push(`${moduleRecord.name} is not registry-supported for routing mode ${mode}. Selected module is retained; supported modes: ${moduleRecord.modes.join(', ')}.`);
+        const detail = moduleRecord.modes.length === 0
+          ? `This is a separate workflow, not mapped to routing modes A, B, or C. ${moduleRecord.modeNote}`
+          : `This pairing is not listed as a planner candidate; compatibility is unverified, not necessarily impossible. Planner candidates: ${moduleRecord.modes.join(', ')}.`;
+        errors.push(`${moduleRecord.name}: ${detail} Selected module is retained.`);
       }
     }
     if (topology && topology.module === 'NTRPL') {

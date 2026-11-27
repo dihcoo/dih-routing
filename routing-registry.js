@@ -1,7 +1,8 @@
 /* DIH Routing canonical module registry (schema v2).
  *
- * This is planning metadata, not a plugin-control protocol. `verified: false`
- * means the UI must not turn the field into an automatic control instruction.
+ * This is planning metadata, not a plugin-control protocol. `modes` lists
+ * planner candidates only; it does not prove plugin support. Empty `modes`
+ * means the workflow is outside the A/B/C topologies.
  */
 (function (root) {
   'use strict';
@@ -12,10 +13,10 @@
     { id: 'drumkrushglue', name: 'DrumKrushGlue', function: 'Drum pocket and generated glue layer', goals: ['drum-layer'], key: 'build-specific', duck: 'generated-layer', externalSidechain: 'unknown', modes: ['A', 'B'], role: 'layer', defaultTarget: 'drums', defaultSource: 'kick', verification: 'needs-current-build-audit', caution: 'Do not treat normal drum processing as an externally keyed duck by default.' },
     { id: 'mariana', name: 'MARIANA', function: 'Bass foundation and generated pressure layer', goals: ['bass-layer'], key: 'build-specific', duck: 'generated-layer', externalSidechain: 'unknown', modes: ['A', 'B'], role: 'layer', defaultTarget: 'bass', defaultSource: 'kick', verification: 'needs-current-build-audit', caution: 'A Side Chain None state must not self-key; verify the installed build.' },
     { id: 'monolith', name: 'MONOLITH', function: 'Impact and generated weight layer', goals: ['impact-layer'], key: 'build-specific', duck: 'generated-layer', externalSidechain: 'unknown', modes: ['A', 'B'], role: 'layer', defaultTarget: 'impact', defaultSource: 'kick', verification: 'needs-current-build-audit', caution: 'Keep audible impact and detector paths distinct.' },
-    { id: 'drum-morpher', name: 'Drum Morpher', function: 'Instrument and external-audio capture/morph', goals: ['capture', 'instrument-routing'], key: 'not-a-duck-control', duck: 'not-applicable', externalSidechain: 'capture-input-observed-in-Logic', modes: ['C'], role: 'capture', defaultTarget: 'capture', defaultSource: 'music', verification: 'needs-host-audit', caution: 'Owner-confirmed MPC-to-METAMORPH capture in Logic (26 Nov 2026); monitoring, silence, no-dry-doubling, and bounce/recall checks remain. Route the source to Drum Morpher Side Chain and enable LIVE MPC AUDIO in Settings. This is not a generic ducking sidechain; keep MIDI pad control independent.' },
+    { id: 'drum-morpher', name: 'Drum Morpher', function: 'Instrument and external-audio capture/morph', goals: ['capture', 'instrument-routing'], key: 'not-a-duck-control', duck: 'not-applicable', externalSidechain: 'capture-input-observed-in-Logic', modes: [], modeNote: 'Capture/instrument workflow; not classified as detector-only, wet-return, or No Output collector routing.', role: 'capture', defaultTarget: 'capture', defaultSource: 'music', verification: 'needs-host-audit', caution: 'Owner-confirmed MPC-to-METAMORPH capture in Logic (26 Nov 2026); monitoring, silence, no-dry-doubling, and bounce/recall checks remain. Route the source to Drum Morpher Side Chain and enable LIVE MPC AUDIO in Settings. This is not a generic ducking sidechain; keep MIDI pad control independent.' },
     { id: 'sacredverb', name: 'SacredVerb', function: 'Internal reverb generation and independently ducked wet layer', goals: ['reverb-tail-management', 'wet-return-duck'], key: 'wet-layer-sidechain', duck: 'wet-layer', externalSidechain: true, modes: ['B', 'C'], role: 'reverbduck', defaultTarget: 'reverb', defaultSource: 'vocal', verification: 'source-and-host', caution: 'The wet layer is distinct from the dry program; an external key is optional for ordinary reverb use.' },
     { id: 'lookout', name: 'LookOut', function: 'Transient shaping with independent Key and Duck paths', goals: ['broadband-duck', 'transient-control'], key: 'independent-detector', duck: 'broadband', externalSidechain: true, modes: ['A', 'B'], role: 'keyduck', defaultTarget: 'drums', defaultSource: 'kick', verification: 'source-and-host', caution: 'Do not require KEY ON merely to permit DUCK.' },
-    { id: 'silver', name: 'SILVER', function: 'Reference-based level matching', goals: ['reference-matching'], key: 'reference-input', duck: 'not-applicable', externalSidechain: 'reference-only', modes: ['A'], role: 'reference', defaultTarget: 'master', defaultSource: 'reference', verification: 'needs-current-build-audit', caution: 'The reference is analysis-only, not a detector or audible mix path.' },
+    { id: 'silver', name: 'SILVER', function: 'Reference-based level matching', goals: ['reference-matching'], key: 'reference-input', duck: 'not-applicable', externalSidechain: 'reference-only', modes: [], modeNote: 'Reference-analysis workflow; its reference input is not the Mode A detector-only key path.', role: 'reference', defaultTarget: 'master', defaultSource: 'reference', verification: 'needs-current-build-audit', caution: 'The reference is analysis-only, not a detector or audible mix path.' },
     { id: 'ntrpl', name: 'NTRPL', function: 'Rewrite and alternate-output processing', goals: ['rewrite', 'alternate-processing'], key: 'build-specific-detector', duck: 'rewrite-layer-needs-proof', externalSidechain: 'needs-current-build-audit', modes: ['A', 'B', 'C'], role: 'rewrite', defaultTarget: 'music', defaultSource: 'vocal', verification: 'needs-current-build-audit', caution: 'The installed 1.0.9 build must be proven with a layer-only stimulus before claiming detector or duck behavior. Use a No Output source-bus topology only after host routing is verified; preserve an intentional dry duplicate for parallel work.' }
   ];
 
@@ -26,7 +27,8 @@
     if (registry.modules.length !== 10) throw new Error('DIH routing registry must contain exactly ten modules.');
     if (new Set(registry.modules.map(module => module.id)).size !== 10) throw new Error('DIH routing registry contains duplicate IDs.');
     registry.modules.forEach(module => {
-      if (!module.name || !module.function || !module.goals.length || !module.modes.length) throw new Error(`Invalid registry entry: ${module.id}`);
+      if (!module.name || !module.function || !module.goals.length || !Array.isArray(module.modes)) throw new Error(`Invalid registry entry: ${module.id}`);
+      if (module.modes.length === 0 && !module.modeNote) throw new Error(`Registry entry without A/B/C candidates needs a workflow note: ${module.id}`);
     });
     return true;
   }

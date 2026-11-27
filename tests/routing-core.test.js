@@ -21,22 +21,39 @@ test('explicit selection wins over recommendations and AUTO alone follows them',
   assert.throws(() => core.resolveModule('toString', 'ANUBIS'), /Unknown routing module/);
 });
 
-test('all 30 explicit module/mode combinations retain selection and validate support', () => {
-  let combinations = 0;
+test('planner-listed topology candidates retain the explicit module', () => {
+  let candidates = 0;
   for (const moduleRecord of registry.modules) {
-    for (const mode of ['A', 'B', 'C']) {
+    for (const mode of moduleRecord.modes) {
       const selection = core.resolveSelection({
         selectedModule: moduleRecord.name,
         recommendedModule: 'ANUBIS',
         mode
       });
       assert.equal(selection.module, moduleRecord.name);
-      assert.equal(selection.valid, moduleRecord.modes.includes(mode));
-      if (!selection.valid) assert.match(selection.errors.join(' '), /Selection retained/);
-      combinations++;
+      assert.equal(selection.valid, true);
+      candidates++;
     }
   }
-  assert.equal(combinations, 30);
+  assert.ok(candidates > 0);
+});
+
+test('unlisted or separate workflows are not presented as impossible plugin behavior', () => {
+  const possibleButUnlisted = core.resolveSelection({
+    selectedModule: 'SacredVerb',
+    recommendedModule: 'ANUBIS',
+    mode: 'A'
+  });
+  assert.equal(possibleButUnlisted.module, 'SacredVerb');
+  assert.equal(possibleButUnlisted.valid, false);
+  assert.match(possibleButUnlisted.errors.join(' '), /compatibility is unverified, not necessarily impossible/);
+
+  for (const name of ['Drum Morpher', 'SILVER']) {
+    const separate = core.resolveSelection({ selectedModule: name, recommendedModule: 'ANUBIS', mode: 'A' });
+    assert.equal(separate.module, name);
+    assert.equal(separate.valid, false);
+    assert.match(separate.errors.join(' '), /separate workflow/);
+  }
 });
 
 test('AUTO recommendation is independent and mode-aware', () => {
@@ -45,14 +62,16 @@ test('AUTO recommendation is independent and mode-aware', () => {
     recommendedModule: 'TEHUTI',
     mode: 'A'
   }).module, 'TEHUTI');
-  assert.equal(core.recommend('reference-matching', 'A').map(result => result.module.name).join(), 'SILVER');
-  assert.equal(core.recommend('capture', 'C').map(result => result.module.name).join(), 'Drum Morpher');
-  assert.equal(core.recommend('reference-matching', 'B').length, 0);
+  assert.equal(core.recommend('reference-matching').map(result => result.module.name).join(), 'SILVER');
+  assert.equal(core.recommend('capture').map(result => result.module.name).join(), 'Drum Morpher');
+  assert.equal(core.recommend('capture', 'C').length, 0);
+  assert.equal(core.recommend('reference-matching', 'A').length, 0);
 });
 
-test('topology validation reports incompatible modules without substitution', () => {
+test('topology validation surfaces unlisted pairings without substitution', () => {
   const invalid = core.validateTopology({ module: 'SacredVerb', mode: 'A' });
   assert.equal(invalid.valid, false);
+  assert.match(invalid.errors.join(' '), /compatibility is unverified, not necessarily impossible/);
   assert.match(invalid.errors.join(' '), /Selected module is retained/);
   assert.equal(core.validateTopology({ module: 'SacredVerb', mode: 'B', audibleReturn: 'Bus 4' }).valid, true);
   assert.match(core.validateTopology({ module: 'Unknown', mode: 'A' }).errors.join(' '), /Unknown routing module/);

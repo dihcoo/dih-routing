@@ -10,6 +10,8 @@ Routing modes are intentionally distinct:
 - **B:** conventional wet return; the wet return remains audible and is checked for dry/wet doubling.
 - **C:** No Output collector plus a separate audible return; collector and return are never conflated.
 
+The module registry lists candidate topologies, not confirmed plugin support. A blank candidate list means the workflow is separate from A/B/C; for example, Drum Morpher capture and SILVER reference analysis are not detector/return/collector modes. An unlisted pairing is unverified, not automatically impossible. No complete ten-by-three applicability matrix is claimed.
+
 NTRPL uses dedicated rewrite/alternate-output topology and requires an explicit parallel-dry duplicate where dry and processed audio are both desired. SacredVerb models internal reverb creation separately from its wet-layer duck. SILVER is reference matching, not a generic ducking processor; Drum Morpher is capture/instrument routing, not a generic ducking processor.
 
 These pages are planning and static-topology tools. They do not modify Logic Pro, write plugin parameters, prove native control mappings, or validate audio. Verify the installed plugin build and the actual host signal path before using a plan in a session.
