@@ -14,6 +14,10 @@ NTRPL uses dedicated rewrite/alternate-output topology and requires an explicit 
 
 These pages are planning and static-topology tools. They do not modify Logic Pro, write plugin parameters, prove native control mappings, or validate audio. Verify the installed plugin build and the actual host signal path before using a plan in a session.
 
+## One-condition bounce workflow
+
+Use the companion Logic templates and the repeatable protocol in [TEST_PROTOCOL.md](TEST_PROTOCOL.md). Each bounce changes one condition only, so a result can be attributed to a module, its key/reference state, or its topology—not to several simultaneous edits. The current installed Routing Studio AU remains a separate deliverable and must be rebuilt/verified independently of this web repository.
+
 ## Test
 
 ```sh

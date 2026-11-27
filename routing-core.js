@@ -28,7 +28,11 @@
       if (topology && topology.collector === topology.audibleReturn) errors.push('Mode C collector and audible return must be separate.');
       if (topology && topology.collectorAudible) errors.push('Mode C collector must not be an unintended audible path.');
     }
-    if (topology && topology.module === 'NTRPL' && topology.parallelDry && !topology.separateDryDuplicate) warnings.push('NTRPL parallel dry requires an explicit separate dry duplicate; do not double-sum the source.');
+    if (topology && topology.module === 'NTRPL') {
+      warnings.push('NTRPL requires a layer-only/key-versus-no-key bounce on the installed build before its detector or duck behavior is treated as proven.');
+      if (topology.parallelDry && !topology.separateDryDuplicate) warnings.push('NTRPL parallel dry requires an explicit separate dry duplicate; do not double-sum the source.');
+    }
+    if (topology && topology.module === 'SacredVerb' && topology.outerDuck && !topology.nativeWetDuckDisabled) warnings.push('When an external processor is intended to be the only wet-return duck, set SacredVerb Reverb Duck to 0 and document the result; otherwise the two reductions can stack.');
     return { errors, warnings, valid: errors.length === 0 };
   }
 
