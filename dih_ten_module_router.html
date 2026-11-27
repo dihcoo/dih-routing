@@ -103,7 +103,7 @@ details summary{cursor:pointer;color:#edc67e}
 <li><strong>Detector independence:</strong> Send 2 at −6 dB scaled the return by −6.0 dB with an unchanged duck pattern; ANUBIS meters read the same (IN 68 %, DUCK −19.8 dB) with Send 2 at 0 or −6 dB or the return aux muted; the duck is the same with the source track's main output set to No Output.</li>
 <li><strong>Save / reopen and realtime:</strong> Side Chain, Duck and Range persisted after quit and reopen; offline, reopened and realtime bounces agree within 0.1–0.5 dB. SacredVerb's reverb is not sample-identical between renders (return correlation 0.31–0.44), so wet levels, not sample nulls, are the valid comparison.</li>
 <li class="warn"><strong>SacredVerb Reverb Duck:</strong> shipped default 50.00 (keyed from its own Side Chain) adds about 2–5 dB of extra duck. Set 0.00 for Mode C. Changing the default needs the next canon build.</li>
-<li><strong>Not yet tested in Mode C:</strong> TEHUTI, LookOut, SILVER and mono sources as the collector/detector, other reverbs or delays, other Logic versions, and a detector bus (instead of the Audio track) as the ANUBIS key.</li>
+<li><strong>Mode C evidence limits:</strong> TEHUTI and LookOut collector configurations have not been verified. SILVER is a separate reference-analysis workflow, not a Mode C collector processor. Mono sources, other reverbs or delays, other Logic versions, and a detector bus (instead of the Audio track) as the ANUBIS key are also untested.</li>
 </ul></details>
 </section>
 
@@ -261,7 +261,7 @@ function applyWorkflow(c,w){c.workflow=w;const pl=n=>c.plugins.find(p=>p.name===
  return c}
 function validate(c){
  const errors=[],warnings=[],hostChecks=[],info=[];
- const sharedMode=c.workflow==='altcollector'?'C':(['wet','delay'].includes(c.workflow)?'B':(c.workflow==='capture'?null:'A'));
+ const sharedMode=c.workflow==='altcollector'?'C':(['wet','delay'].includes(c.workflow)?'B':(['capture','reference'].includes(c.workflow)?null:'A'));
  const shared=sharedMode?DIHRoutingCore.validateTopology({mode:sharedMode,module:c.workflow==='altcollector'?c.alt.processor:undefined,collector:c.workflow==='altcollector'?c.buses.collector:null,audibleReturn:c.workflow==='altcollector'?c.buses.altdest:(c.workflow==='wet'?c.buses.reverb:(c.workflow==='delay'?c.buses.delay:null)),collectorAudible:c.workflow==='altcollector'&&c.alt.collOut==='audible'}):{errors:[],warnings:[]};
  errors.push(...shared.errors);warnings.push(...shared.warnings);
  for(const [role,num] of Object.entries(c.buses))if(!Number.isInteger(num)||num<1||num>256)errors.push('Invalid bus number for '+role);
@@ -313,10 +313,11 @@ function validate(c){
   if(a.sendOn==='yes'&&a.collOut==='noout')hostChecks.push('Delivery from a No Output collector was proven in Logic 12.2 on 21 Nov 2026 (return present with Send 2 on, bit-exact silence with it off). Re-check on a different Logic version or when the effect or ANUBIS build changes: listen at the return and meter the return aux.');}
  if(c.workflow==='capture'&&!active.some(p=>p.type==='capture'))warnings.push('Capture workflow selected without Drum Morpher enabled');
  if(c.workflow==='reference'&&!active.some(p=>p.type==='reference'))warnings.push('Reference workflow selected without SILVER enabled');
- if(!alt){if(c.feed.collectorOut==='noout')hostChecks.push('The detector aux is set to No Output: confirm in the current plugin that the Side Chain menu still delivers the key (a meter move or a key/no-key level change). This worked for ANUBIS on one Logic setup; check each plugin and build.');
+ if(sharedMode&&!alt){if(c.feed.collectorOut==='noout')hostChecks.push('The detector aux is set to No Output: confirm in the current plugin that the Side Chain menu still delivers the key (a meter move or a key/no-key level change). This worked for ANUBIS on one Logic setup; check each plugin and build.');
   else hostChecks.push('The detector aux is audible: make sure the key is not doubling the source in the mix.');}
- if(active.some(p=>p.type==='capture'))hostChecks.push('Drum Morpher: whether Logic exposes an audio input to the installed AU instrument is unverified.');
- if(active.length)hostChecks.push('Choosing "Side Chain: None" may not disconnect a key on plugin builds made before 20 Nov 2026 (see Known build notes). Remove the send or bypass the plugin to prove a no-key state.');
+ if(active.some(p=>p.type==='capture'))hostChecks.push('Drum Morpher: MPC-to-METAMORPH capture was owner-confirmed in Logic; verify monitoring, silence, no-dry-doubling, and bounce/recall.');
+ if(active.some(p=>p.type==='reference'))hostChecks.push('SILVER: keep the reference input analysis-only; compare matched reference-on/off renders before claiming behavior.');
+ if(active.some(p=>!['capture','reference'].includes(p.type)))hostChecks.push('Choosing "Side Chain: None" may not disconnect a key on plugin builds made before 20 Nov 2026 (see Known build notes). Remove the send or bypass the plugin to prove a no-key state.');
  if(active.some(p=>['ANUBIS','DrumKrushGlue','MARIANA','MONOLITH'].includes(p.name)))hostChecks.push('On mono tracks, check that the key is not heard in the right output or at half strength on builds before 20 Nov 2026.');
  return {errors,warnings,hostChecks,info};
 }
