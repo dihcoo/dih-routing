@@ -48,7 +48,7 @@ details summary{cursor:pointer;color:#edc67e}
 <body>
 <p><a href="dih_ducking_configurator.html">Original 42-plugin configurator (corrected)</a> · <a href="FULL_TEN_MODULE_ROUTING_GUIDE.pdf">Full routing guide (PDF)</a></p>
 <h1>DIH WORLD AUDIO · TEN-MODULE ROUTING STUDIO</h1>
-<p>Planning companion · Logic Pro / AU · offline · no direct DAW control · revision 21 November 2026 (v5). Static checks never mean "Logic verified"; the Mode C panel below separates what was measured in Logic 12.2 from what is still untested.</p>
+<p>Planning companion · Logic Pro / AU · offline · no direct DAW control · revision 26 November 2026 (v5). Static checks never mean "Logic verified"; the Mode C panel below separates what was measured in Logic 12.2 from what is still untested.</p>
 <div id="pluginSize" class="plugin-size" hidden><span>Plug-in window size:</span><button type="button" data-size="compact">Compact</button><button type="button" data-size="standard">Standard</button><button type="button" data-size="wide">Wide</button><small>The window follows these sizes (760 to 1800 wide); shown only inside the DIH Routing Studio plug-in.</small></div>
 
 <section class="geb" id="geb-guide" aria-labelledby="geb-title" data-jeb-label="GEB routing-guide identity">
@@ -189,7 +189,7 @@ details summary{cursor:pointer;color:#edc67e}
 <section>
 <h2>Help: the ten modules and what is established</h2>
 <div class="scroll"><table><thead><tr><th>Plugin</th><th>Behavior</th><th>Routing distinction</th><th>Status</th></tr></thead><tbody id="helptable"></tbody></table></div>
-<p class="note">Host tags cite bounded Logic 12.2 bounce tests made on 20 November. They establish only the named configuration, default/preset state, and source material; they are not an all-settings certification. The precise evidence and remaining work are in <a href="HOST_TEST_LOG.pdf">HOST_TEST_LOG.md</a>.</p>
+<p class="note">Host tags cite bounded Logic 12.2 bounce tests made on 20 November. They establish only the named configuration, default/preset state, and source material; they are not an all-settings certification. See the <a href="TEST_PROTOCOL.md">current functional-evidence snapshot and remaining tests</a> and the <a href="HOST_TEST_LOG.pdf">historical host-test log</a>.</p>
 <details><summary>Known build notes (owner / internal, 20 Nov 2026)</summary><div id="notesbody"></div></details>
 </section>
 
@@ -310,7 +310,7 @@ function validate(c){
  if(c.workflow==='reference'&&!active.some(p=>p.type==='reference'))warnings.push('Reference workflow selected without SILVER enabled');
  if(!alt){if(c.feed.collectorOut==='noout')hostChecks.push('The detector aux is set to No Output: confirm in the current plugin that the Side Chain menu still delivers the key (a meter move or a key/no-key level change). This worked for ANUBIS on one Logic setup; check each plugin and build.');
   else hostChecks.push('The detector aux is audible: make sure the key is not doubling the source in the mix.');}
- if(active.some(p=>p.type==='capture'))hostChecks.push('Drum Morpher: whether Logic exposes an audio input to the installed AU instrument is unverified.');
+ if(active.some(p=>p.type==='capture'))hostChecks.push('Drum Morpher: MPC-to-METAMORPH capture was owner-confirmed in Logic on 26 Nov 2026; verify monitoring, silence, no-dry-doubling and bounce/recall.');
  if(active.length)hostChecks.push('Choosing "Side Chain: None" may not disconnect a key on plugin builds made before 20 Nov 2026 (see Known build notes). Remove the send or bypass the plugin to prove a no-key state.');
  if(active.some(p=>['ANUBIS','DrumKrushGlue','MARIANA','MONOLITH'].includes(p.name)))hostChecks.push('On mono tracks, check that the key is not heard in the right output or at half strength on builds before 20 Nov 2026.');
  return {errors,warnings,hostChecks,info};
@@ -330,7 +330,7 @@ function stepsFor(p,c){const b=c.buses,wet=['reverb','delay'].includes(p.target)
  a.push('Select Bus '+b[p.source]+' in '+p.name+'\'s Side Chain menu if the AU exposes it; verify the detector responds and no feedback loop forms.');
  if(p.name==='TEHUTI')a.push('TEHUTI: measure its own key response with ANUBIS bypassed. Crossovers 161.8 Hz and 1618 Hz (source). Start with one band and raise DEPTH gradually.');
  else if(p.name==='ANUBIS')a.push('ANUBIS: for the coordinated chain pick preset TEHUTI DUCK GUARD [Stereo] (source values: threshold -38 dB, ratio 3:1, attack 2 ms, hold 70 ms, release 220 ms, range -30 dB). After recall confirm Sidechain Key OFF and Sidechain Duck ON. Factory values, not a promised reduction.');
- else if(p.type==='capture')a.push('Drum Morpher is capture, not ducking: check that Logic exposes an input, then test capture, monitoring and silence detection; keep MIDI independent.');
+ else if(p.type==='capture')a.push('Drum Morpher is capture, not ducking: MPC-to-METAMORPH capture was owner-confirmed in Logic on 26 Nov 2026; verify monitoring, silence, no-dry-doubling and bounce/recall; keep MIDI independent.');
  else if(p.type==='reference')a.push('SILVER: choose the reference bus as the external input, enable Reference and Ref Match; the reference is neither a detector nor an audible track.');
  else if(p.type==='reverbduck')a.push('SacredVerb: set Side Chain to the detector bus and enable Sidechain Key; Reverb Duck attenuates only the wet reverb (shipped default 50.00; 0.00 when ANUBIS does the ducking, as in Mode C). Keep the audible return on a bus that reaches the mix.');
  else if(p.type==='keyduck')a.push('LookOut: test Key only, Duck only, then Key + Duck.');

@@ -48,7 +48,7 @@ details summary{cursor:pointer;color:#edc67e}
 <body>
 <p><a href="dih_ducking_configurator.html">Original 42-plugin configurator (corrected)</a> · <a href="FULL_TEN_MODULE_ROUTING_GUIDE.pdf">Full routing guide (PDF)</a></p>
 <h1>DIH WORLD AUDIO · TEN-MODULE ROUTING STUDIO</h1>
-<p>Planning companion · Logic Pro / AU · offline · no direct DAW control · revision 21 November 2026 (v5). Static checks never mean "Logic verified"; the Mode C panel below separates what was measured in Logic 12.2 from what is still untested.</p>
+<p>Planning companion · Logic Pro / AU · offline · no direct DAW control · revision 26 November 2026 (v5). Static checks never mean "Logic verified"; the Mode C panel below separates what was measured in Logic 12.2 from what is still untested.</p>
 <div id="pluginSize" class="plugin-size" hidden><span>Plug-in window size:</span><button type="button" data-size="compact">Compact</button><button type="button" data-size="standard">Standard</button><button type="button" data-size="wide">Wide</button><small>The window follows these sizes (760 to 1800 wide); shown only inside the DIH Routing Studio plug-in.</small></div>
 
 <section class="geb" id="geb-guide" aria-labelledby="geb-title" data-jeb-label="GEB routing-guide identity">
@@ -190,7 +190,7 @@ details summary{cursor:pointer;color:#edc67e}
 <section>
 <h2>Help: the ten modules and what is established</h2>
 <div class="scroll"><table><thead><tr><th>Plugin</th><th>Behavior</th><th>Routing distinction</th><th>Status</th></tr></thead><tbody id="helptable"></tbody></table></div>
-<p class="note">Host tags cite bounded Logic 12.2 bounce tests made on 20 November. They establish only the named configuration, default/preset state, and source material; they are not an all-settings certification. The precise evidence and remaining work are in <a href="HOST_TEST_LOG.pdf">HOST_TEST_LOG.md</a>.</p>
+<p class="note">Host tags cite bounded Logic 12.2 bounce tests made on 20 November. They establish only the named configuration, default/preset state, and source material; they are not an all-settings certification. See the <a href="TEST_PROTOCOL.md">current functional-evidence snapshot and remaining tests</a> and the <a href="HOST_TEST_LOG.pdf">historical host-test log</a>.</p>
 <details><summary>Known build notes (owner / internal, 20 Nov 2026)</summary><div id="notesbody"></div></details>
 </section>
 
@@ -341,7 +341,7 @@ function stepsFor(p,c){const b=c.buses,wet=['reverb','delay'].includes(p.target)
  else if(p.name==='SacredVerb')a.push('SacredVerb generates native reverb; normal reverb does not require an external key. Reverb Duck independently attenuates the wet layer only; external-key routing remains optional and must be host-verified.');
  else if(p.name==='LookOut')a.push('LookOut supports independent KEY and DUCK behavior; test KEY only, DUCK only, and both.');
  else if(p.name==='SILVER')a.push('SILVER performs reference-based matching, not generic ducking. Keep its reference input analysis-only.');
- else if(p.name==='Drum Morpher')a.push('Preserve instrument and external-audio capture routing; do not describe capture as ordinary ducking.');
+ else if(p.name==='Drum Morpher')a.push('MPC-to-METAMORPH capture was owner-confirmed in Logic on 26 Nov 2026; verify monitoring, silence, no-dry-doubling, and bounce/recall. Preserve the independent instrument and capture paths; do not describe capture as ordinary ducking.');
  else if(p.name==='NTRPL')a.push('Preserve rewrite/alternate-output routing and any intentional dry duplicate. Detector behavior remains unverified until a layer-only, key-versus-no-key test proves it.');
  else if(record.verification==='needs-current-build-audit')a.push(record.caution+' Do not generate unverified parameter names or values.');
  else a.push('Verify the installed native input and current host routing before generating plugin-control instructions.');
