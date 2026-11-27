@@ -57,4 +57,25 @@ Keep dry program, collector, and audible wet return separate. A Mode C collector
 
 ### Drum Morpher
 
-Use the existing Hub/MPC template. Verify capture, monitoring, and silence independently from MIDI pad performance. Controller behavior should follow the documented Hub architecture; do not substitute generic sidechain or ducking tests.
+Use the existing Hub/MPC template. Owner reports MPC-to-METAMORPH capture succeeded in Logic on 26 Nov 2026. Record the installed build and retain a bounce or screenshot when available. Still verify monitoring, silence, and no-dry-doubling independently from MIDI pad performance. Controller behavior should follow the documented Hub architecture; do not substitute generic sidechain or ducking tests.
+
+## Existing functional evidence (archive reviewed 26 Nov 2026)
+
+This is a status of evidence already present in the owner-maintained Routing Tests archive, not a fresh certification of every installed build. Offline AU-host results prove engine response only; they do not prove Logic routing or saved-project behavior.
+
+| Module | Evidence on file | Routing-guide status / remaining proof |
+|---|---|---|
+| ANUBIS | Logic 12.2, installed 1.0.12: a Bus 32 vocal key produced 51–63% KEY while active and 0% in gaps; Side Chain None was idle after the guard. | Key reception is observed in Logic. Keep KEY and DUCK as distinct controls; capture matched key-only, duck-only, and combined active/gap bounces before publishing numeric behavior. |
+| TEHUTI | Logic 12.2, 1.0.7: Bus 32 key changed the tested ducking preset by about 2.04 dB in active windows and about 0.06 dB in gaps versus no-key; mono, silence, and post-fix None controls passed. | Logic-tested for this build, preset, source, and routing. Do not generalize to other presets/builds or unsupported modes. |
+| DrumKrushGlue | Offline AU host with distinct kick key: about 0.4 dB reduction during kicks and 0.3 dB between; no-sidechain control was unchanged. | Engine response observed but small. A matched Logic key/no-key bounce is still needed to verify host mapping and generated-layer behavior. |
+| MARIANA | Offline AU host: about 3.3 dB reduction during kicks and 2.8 dB between; no-sidechain control was unchanged. | Engine response observed. Logic confirmed post-guard None is idle, but a post-guard real-key bounce is still needed. |
+| MONOLITH | Offline AU host: about 3.7 dB reduction during kicks and 3.1 dB between; no-sidechain control was unchanged. | Engine response observed. Logic confirmed post-guard None is idle, but a post-guard real-key bounce is still needed. |
+| Drum Morpher | AU sidechain input and Logic's Side Chain selector were present. Owner reports MPC connected to Drum Morpher in Logic and METAMORPH capture succeeded on 26 Nov 2026; no bounce or screenshot is yet in the archive. | Capture is owner-confirmed in this Logic session, not yet artifact-backed. Verify monitoring, silence, no-dry-doubling, and bounce/recall. Do not describe this as ordinary ducking. |
+| SacredVerb | Wet/no-duck and keyed renders exist. The bypass render is invalid as a dry baseline because dry vocal is doubled; use `CHAIN_0`. | These files do not establish key-following in active versus gap windows. Re-test the wet-only layer with matched no-key and real-key passes; ordinary reverb must also work without a key. |
+| LookOut | Offline AU host: about 10.6 dB reduction during kicks and 7.5 dB between; no-sidechain control changed about 0.3 dB. Logic's post-guard None state was idle. | Engine response observed. Logic key-only, duck-only, and combined passes are still needed to prove the host route and independent controls. |
+| SILVER | Verified reference-on renders D/E exist; the earlier C render is invalid because the UI toggle did not change state. | Reference matching is not a detector sidechain. Compare valid reference-on renders with a matched reference-off baseline before claiming matching behavior. |
+| NTRPL | Offline AU host showed about 1.4 dB reduction during kicks and a 0.5 dB increase between them; the no-sidechain control was unchanged. | Response is modest and not isolated to a layer in Logic. Keep detector behavior unverified until a layer-only, matched key/no-key Logic test passes. |
+
+### Evidence gate for guide claims
+
+Label behavior **Logic-verified** only when the installed build and host are recorded, the audible program and detector paths are separate, the no-key control removes the send (not just Side Chain `None`), and matched active/gap renders demonstrate the expected response. Save/reopen recall and no-key silence must also be checked. Keep offline-engine results labeled **offline-only**; do not use them alone to claim Logic routing works. The archive reviewed for this snapshot is not shipped with this repository, so retain its bounces, measurements, and screenshots alongside future test records.
