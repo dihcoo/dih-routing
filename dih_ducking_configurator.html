@@ -226,7 +226,7 @@ svg{background:radial-gradient(500px 200px at 50% 40%,#1a1409,#0a0908)}
 <div class="dcg-grid"><div class="dcg-tile"><strong>KEY</strong>Plugin-specific interpretation, detector selection, or processing enable. Its exact meaning differs by engine.</div><div class="dcg-tile"><strong>DUCK</strong>Plugin-specific gain-reduction amount/target. It may affect broadband audio, a spectral region, an added layer, or wet effects.</div><div class="dcg-tile"><strong>External SIDECHAIN</strong>Separate host-provided signal, when available. It must not automatically become audible output.</div></div>
 <p class="dcg-note">Examples: LookOut has independent KEY and DUCK paths; SacredVerb ducks a wet effects layer; NTRPL 1.0.9 still requires a layer-only bounce before detector behavior is claimed. This page does not claim their engines share the same signal law. An enabled UI control is not proof a host key is connected.</p>
 <h3 class="dcg-heading">Plugin-specific routing planner</h3>
-<div class="dcg-controls"><div><label for="dcgPlugin">Processor</label><select id="dcgPlugin"></select></div><div><label for="dcgUse">Processing intent</label><select id="dcgUse"><option value="vocal">Vocal / voice</option><option value="bass">Bass / low end</option><option value="drum">Drums / transients</option><option value="spatial">Spatial / wet FX</option><option value="reference">Reference matching</option><option value="capture">Instrument / capture</option></select></div><div><label for="dcgMode">Routing architecture</label><select id="dcgMode"><option value="A">A — direct / detector-only</option><option value="B">B — separate wet return</option><option value="C">C — collector + audible return</option></select></div><div><label for="dcgKey">KEY processing state</label><select id="dcgKey"><option value="off">OFF</option><option value="on">ON</option><option value="plugin-defined">Plugin-defined / not available</option></select></div><div><label for="dcgSc">External host input</label><select id="dcgSc"><option value="none">None</option><option value="detector">Detector sidechain assigned</option><option value="reference">Reference input assigned</option></select></div></div>
+<div class="dcg-controls"><div><label for="dcgPlugin">Processor</label><select id="dcgPlugin"></select></div><div><label for="dcgUse">Processing intent</label><select id="dcgUse"><option value="vocal">Vocal / voice</option><option value="bass">Bass / low end</option><option value="drum">Drums / transients</option><option value="spatial">Spatial / wet FX</option><option value="reference">Reference matching</option><option value="capture">Instrument / capture</option></select></div><div><label for="dcgMode">Routing architecture</label><select id="dcgMode"><option value="A">A — direct / detector-only</option><option value="B">B — separate wet return</option><option value="C">C — collector + audible return</option></select></div><div><label for="dcgKey">KEY processing state</label><select id="dcgKey"><option value="off">OFF</option><option value="on">ON</option><option value="plugin-defined">Plugin-defined / not available</option></select></div><div><label for="dcgDuck">DUCK processing state</label><select id="dcgDuck"><option value="off">OFF</option><option value="on">ON</option><option value="plugin-defined">Plugin-defined / not available</option></select></div><div><label for="dcgSc">External SIDECHAIN / reference input</label><select id="dcgSc"><option value="none">None</option><option value="detector">Detector sidechain assigned</option><option value="reference">Reference input assigned</option><option value="capture">External audio capture feed</option></select></div></div>
 <div class="dcg-output" id="dcgResult" aria-live="polite"></div>
 <h3 class="dcg-heading">All ten routing modules</h3><div class="dcg-grid" id="dcgCards"></div>
 <p class="dcg-note">Source-verified notes are labeled; other products require their current native engine/parameter audit. This is a planning guide, not a Logic API, a DSP contract, or an automatic parameter writer. Bus numbers must be chosen and verified in the host. <a href="https://dihworldaudio.com/manuals/" target="_blank" rel="noopener noreferrer">Official DIH manuals</a> · <a href="dih_ten_module_router.html">Unified ten-module router</a>.</p>
@@ -237,31 +237,39 @@ svg{background:radial-gradient(500px 200px at 50% 40%,#1a1409,#0a0908)}
 <script id="dihCapabilityScript">
 (function(){
 'use strict';
-const MODELS=DIHRoutingRegistry.modules.map(module=>({id:module.name,family:module.function,purpose:module.function,key:module.key,duck:module.duck,external:module.externalSidechain===true?'External host input when the installed build exposes it':module.externalSidechain==='reference-only'?'Reference input only':'Verify current native/host support',modes:module.modes,confidence:module.verification,guide:module.caution}));
+const MODELS=DIHRoutingRegistry.modules.map(module=>({id:module.name,family:module.function,purpose:module.function,key:module.key,duck:module.duck,externalSidechain:module.externalSidechain,external:module.externalSidechain===true?'External host input when the installed build exposes it':module.externalSidechain==='reference-only'?'Reference input only':'Verify current native/host support',modes:module.modes,verification:module.verification,confidence:module.verification,guide:module.caution}));
 const target=document.getElementById('dihCapabilityGuide');if(!target)return;
 const q=id=>target.querySelector('#'+id);
-const sel=q('dcgPlugin'),use=q('dcgUse'),mode=q('dcgMode'),key=q('dcgKey'),sc=q('dcgSc'),out=q('dcgResult'),cards=q('dcgCards');
+const sel=q('dcgPlugin'),use=q('dcgUse'),mode=q('dcgMode'),key=q('dcgKey'),duck=q('dcgDuck'),sc=q('dcgSc'),out=q('dcgResult'),cards=q('dcgCards');
 function addOption(control,label,value){const o=document.createElement('option');o.textContent=label;o.value=value;control.appendChild(o)}
 MODELS.forEach(m=>addOption(sel,m.id+' — '+m.purpose,m.id));
 function buildCards(){cards.replaceChildren();MODELS.forEach(m=>{let box=document.createElement('div');box.className='dcg-tile';let title=document.createElement('strong');title.textContent=m.id;let role=document.createElement('div');role.textContent=m.purpose;let state=document.createElement('small');state.textContent=m.confidence;box.append(title,role,state);cards.appendChild(box)})}
-function draw(){const m=MODELS.find(x=>x.id===sel.value)||MODELS[0];
-const scv=sc.value, keyv=key.value, goal=use.value, md=mode.value;
+function draw(){const m=MODELS.find(x=>x.id===sel.value);
+if(!m){out.textContent='Unknown processor selection. Choose a module from the canonical ten-module registry; no substitute was selected.';return}
+const scv=sc.value, keyv=key.value, duckv=duck.value, goal=use.value, md=mode.value;
 let warnings=[],steps=[];
-if(!m.modes.includes(md))warnings.push('Selected routing mode is not yet documented for this product. Do not use this as an automatic setup instruction.');
+const selection=DIHRoutingCore.resolveSelection({selectedModule:m.id,recommendedModule:m.id,mode:md});
+if(!selection.valid)warnings.push(...selection.errors);
 if(scv==='none'&&keyv==='on')warnings.push("KEY ON does not establish an external sidechain by itself; refer to this plugin’s native KEY behavior.");
-if(scv!=='none')steps.push('Assign the external '+(scv==='reference'?'reference':'detector')+' source in the host only if the installed AU exposes the correct input. Do not connect it to the audible return.');
+if(duckv==='on'&&m.duck==='not-applicable')warnings.push('DUCK is not applicable to this module; the selected module remains unchanged.');
+if(duckv==='on'&&m.verification==='needs-current-build-audit')warnings.push('DUCK behavior is not verified for this module/build; do not generate a native control instruction.');
+if(scv==='detector'&&m.externalSidechain==='reference-only')warnings.push('This module accepts a reference input, not a generic detector sidechain.');
+if(scv==='reference'&&m.externalSidechain!=='reference-only')warnings.push('Reference input is not the selected module’s documented input type.');
+if(scv==='capture'&&m.key!=='not-a-duck-control')warnings.push('Capture feed selected for a module not documented as an audio-capture instrument.');
+if(scv==='detector'&&m.externalSidechain!==true)warnings.push('External detector support is unverified for this module/build.');
+if(scv!=='none')steps.push('Route the selected '+(scv==='reference'?'reference':scv==='capture'?'capture':'detector')+' feed independently; verify the installed AU input and keep reference/capture material out of unintended audible paths.');
 steps.push('Program audio follows the selected track, bus, or effects-return path; keep audible output independent from detector/reference input.');
 if(md==='B')steps.push('For wet effects, feed an audible return; keep 100%-wet processing where the effect/return workflow requires it. Do not set the audible return to No Output.');
 if(md==='C')steps.push('Use a dedicated collector and separate audible return when required; the collector is not automatically audible. Verify no dry duplication.');
 if(m.id==='NTRPL')steps.push('First run a layer-only, key-versus-no-key bounce on the installed build. Only then, if the host route is proven, use a dedicated NTRPL bus with an explicit dry duplicate for parallel work; never double-sum the source.');
-if(m.id==='SACREDVERB'&&goal==='vocal')steps.push('Start with vocal insert or audible wet-return processing. An external key is optional—not required for reverb to work.');
+if(m.id==='SacredVerb'&&goal==='vocal')steps.push('Start with native reverb processing; an external key is optional. Reverb Duck affects the wet layer only, and ordinary reverb does not require a key.');
 if(m.id==='LookOut'&&scv!=='none')steps.push('KEY and DUCK are separate; the LookOut DUCK response is not gated by KEY ON.');
 if(m.id==='SILVER')steps.push('Reference matching is not kick-triggered ducking; keep the reference out of the audible program bus.');
-if(m.id==='Drum Morpher')steps.push('Use the installed instrument/capture routing; do not assign a ducker template to the MPC pad path.');
-const lines=[['Purpose',m.purpose],['Verified status',m.confidence],['KEY',m.key],['DUCK / target',m.duck],['External input',m.external],['Routing mode',md+' (A: direct/detector | B: wet return | C: collector)'],['Selected intent',goal],['KEY state',keyv],['Sidechain/reference',scv],['Plugin guidance',m.guide],['Plan',steps.map((s,i)=>(i+1)+'. '+s).join('\n')],['Cautions',warnings.length?warnings.join('\n'):'Check plugin manual and actual host routing before audio or parameter writes.']];
+if(m.id==='Drum Morpher')steps.push('Use the instrument/external-audio capture path and verify it independently; capture is not ordinary ducking and MIDI pad routing stays separate.');
+const lines=[['Selected processor',m.id],['Purpose',m.purpose],['Verified status',m.confidence],['KEY',m.key],['DUCK / target',m.duck],['External input',m.external],['Routing mode',md+' (A: detector-only | B: audible wet return | C: No Output collector + separate audible return)'],['Selected intent',goal],['KEY state',keyv],['DUCK state',duckv],['SIDECHAIN / reference / capture',scv],['Plugin guidance',m.guide],['Plan',steps.map((s,i)=>(i+1)+'. '+s).join('\n')],['Cautions',warnings.length?warnings.join('\n'):'Check plugin manual and actual host routing before audio or parameter writes.']];
 out.replaceChildren();for(const [title,value] of lines){let h=document.createElement('strong');h.textContent=title;let p=document.createElement('p');p.textContent=value;out.append(h,p)}
 }
-buildCards();[sel,use,mode,key,sc].forEach(x=>x.addEventListener('change',draw));draw();
+buildCards();[sel,use,mode,key,duck,sc].forEach(x=>x.addEventListener('change',draw));draw();
 })();
 </script>
 
@@ -303,7 +311,8 @@ const SOURCES = {
   vocal:  {name:"Lead Vocal",     key:"Vocal Key",     bus:31, kind:"voice"},
   narr:   {name:"Narration",      key:"Narration Key", bus:32, kind:"voice"},
   snare:  {name:"Snare / Perc",   key:"Perc Key",      bus:33, kind:"perc"},
-  sfx:    {name:"SFX / Hits",     key:"SFX Key",       bus:34, kind:"perc"}
+  sfx:    {name:"SFX / Hits",     key:"SFX Key",        bus:34, kind:"perc"},
+  reference:{name:"Reference audio",key:"Reference input",bus:35,kind:"reference"}
 };
 const TARGETS = {
   bass:   {name:"Bass Bus",       type:"dry",    out:"Mix"},
@@ -333,15 +342,15 @@ const PROCS = {
   TEHUTI:   {role:"Spectral ducking (Low / Mid / High)", scope:"band", verified:true,
              cap:"Sidechain + spectral ducking: owner-confirmed",shot:"TEHUTI.png",pos:"50% 30%",
              bullets:["Controls shown: LOW, MID, HIGH, DEPTH, SPEED, MIX, HPF/LPF, host Side Chain","No Attack, Hold or Release controls","Crossovers are 161.8 Hz and 1618 Hz (PHI x 100, PHI x 1000), confirmed in source","Kick → Low first; voice → Mid, then High (Atlas guidance)"]},
-  MARIANA:  {role:"Sub foundation (generated layer only)", scope:"layer", verified:false,cap:"Sidechain behavior: unverified",shot:"MARIANA.png",pos:"50% 30%",
-             bullets:["Key ducks the added sub layer only","Original bass is outside the duck multiplier","Detector ≈ 35–160 Hz (Atlas)","Native key behavior must be verified first"]},
-  MONOLITH: {role:"Stone / weight layer", scope:"layer", verified:false,cap:"Sidechain behavior: unverified",shot:"MONOLITH.png",pos:"50% 30%",
-             bullets:["Key moves the added weight aside","Original impact is protected","Detector ≈ 40–180 Hz (Atlas)","Native key behavior must be verified first"]},
-  NTRPL:    {role:"Rewrite layer", scope:"layer", verified:false,cap:"Sidechain behavior: unverified",shot:"NTRPL.png",pos:"50% 30%",
-             bullets:["Generated harmonic layer yields to the key","Retained source is not attenuated","Detector ≈ 35–160 Hz (Atlas)","Native key behavior must be verified first"]},
-  SACREDVERB:{role:"Wet-only reverb duck", scope:"wet",    verified:false,cap:"Sidechain behavior: unverified",shot:"SacredVerb.png",pos:"50% 30%",
+  MARIANA:  {role:"Sub foundation (generated layer only)", scope:"layer", verified:false,cap:"Generated bass-layer route; key behavior needs current-build verification",shot:"MARIANA.png",pos:"50% 30%",
+             bullets:["The routing registry describes a generated bass-pressure layer","Do not assume the dry bass is attenuated","Verify the installed key path; no detector range or control value is prescribed"]},
+  MONOLITH: {role:"Stone / weight layer", scope:"layer", verified:false,cap:"Generated impact-layer route; key behavior needs current-build verification",shot:"MONOLITH.png",pos:"50% 30%",
+             bullets:["The routing registry describes a generated impact/weight layer","Keep audible impact and detector paths distinct","Verify the installed key path; no detector range or control value is prescribed"]},
+  NTRPL:    {role:"Rewrite and alternate-output processing", scope:"layer", verified:false,cap:"Rewrite-layer detector behavior needs a current-build layer-only test",shot:"NTRPL.png",pos:"50% 30%",
+             bullets:["Preserve the rewrite and alternate-output paths","Retain a dry duplicate only when parallel dry is intentional","Do not claim detector behavior until a layer-only key-versus-no-key test confirms it"]},
+  SacredVerb:{role:"Native reverb with independently ducked wet layer", scope:"wet", verified:false,cap:"Native wet-layer duck; external-key mapping requires host verification",shot:"SacredVerb.png",pos:"50% 30%",
              bullets:["Native wet-layer ducking per existing visual guide","Use wet-only output on an aux","Included in the ten-module catalog; confirm current build","Native Side Chain availability to be verified"]},
-  DrumKrushGlue: {role:"Drum pocket / glue — keyed added layer",scope:"layer",verified:false,cap:"Previously tested · settings depend on installed build",shot:"DrumKrushGlue.png",pos:"50% 30%",bullets:["External kick or drum key shapes the added glue layer","Not a substitute for separating detector and audible paths","Use the current plugin's KEY controls and independently verify the host sidechain"]},
+  DrumKrushGlue: {role:"Drum pocket / generated glue layer",scope:"layer",verified:false,cap:"Generated-layer routing; native key/control mapping needs current-build verification",shot:"DrumKrushGlue.png",pos:"50% 30%",bullets:["Use for drum processing and its generated glue layer","Keep detector and audible program paths separate","Do not generate native control instructions until the installed build is verified"]},
   LookOut: {role:"Transient shaping with independent Key / Duck",scope:"full",verified:false,cap:"Control Hub integration verified · per-session key needs confirmation",shot:"LookOut.png",pos:"50% 30%",bullets:["KEY and DUCK are distinct controls; Duck Amount is a continuous float","Host sidechain selection must be confirmed independently","Hub instance numbers are dynamic and must not be treated as product IDs"]},
   SILVER: {role:"Reference-driven level matching",scope:"reference",verified:false,cap:"Reference input, not a ducking detector",shot:"SILVER.png",pos:"50% 30%",bullets:["Supply a dedicated reference signal through the host-supported reference input","This is level matching, not trigger-based ducking","Do not route the reference audio into the audible return"]},
   "Drum Morpher": {role:"MIDI instrument and external audio capture",scope:"capture",verified:false,cap:"Instrument capture · not a generic ducker",shot:"Drum_Morpher.png",pos:"50% 30%",bullets:["Instrument / MPC-pad operation is independent of external-audio capture","Confirm the current Audio Unit exposes and receives the intended external feed","Never claim this is an ordinary ducking insert or infer an AU sidechain from the selector alone"]},
@@ -349,7 +358,7 @@ const PROCS = {
 };
 
 const ALLOWED42=["AEGIS_NOVA","ANKH","ANUBIS","APIS","ARCHAEOLOGIST_X","AU","AUSAR","AUSET","Ballpark","Cathedral","DeBo","DEPTH_BOOST_PRO","Depth_Impact_Hybrid_X","Drum_Morpher","DrumKrushGlue","EchoLocate","GOLD","Horizon_X","IMHOTEP","Khepri_Sacred_Tape_Machine","LookOut","MAAT","MARIANA","MONOLITH","NSR","NTRPL","NTRSTLLR","OTIS","PARALLAX","PLATINUM","PTAHTUBE","SacredVerb","SERQET","SESHAT","SILVER","SlotMachine","SOVEREIGN","SPHYNX","TEHUTI","Thoth","TRIPLER","WPR"];
-const idOf=n=>n==="SACREDVERB"?"SacredVerb":n==="Drum Morpher"?"Drum_Morpher":n;
+const idOf=n=>n==="Drum Morpher"?"Drum_Morpher":n;
 Object.keys(PROCS).filter(n=>n!=="None").forEach(n=>{ if(!ALLOWED42.includes(idOf(n))) throw new Error("Processor outside the 42 whitelist: "+n); });
 /* ---------- State & helpers ---------- */
 const $ = id => document.getElementById(id);
@@ -359,8 +368,8 @@ let free=false, redTarget="mid";
 
 fill("src",SOURCES,"kick"); fill("tgt",TARGETS,"bass"); fill("goal",GOALS,"spectral");
 fill("daw",DAWS,"logic"); fill("mode",MODES,"t2b");
-{ const names={}; DIHRoutingRegistry.modules.forEach(module=>{const name=module.name==='SacredVerb'?'SACREDVERB':module.name;names[name]=name;});
-  fill("p1",names,"TEHUTI"); const n2=Object.assign({None:"None"},names); fill("p2",n2,"None"); }
+{ const names={AUTO:"AUTO — follow recommendation"}; DIHRoutingRegistry.modules.forEach(module=>{names[module.name]=module.name;});
+  fill("p1",names,"TEHUTI"); const n2=Object.assign({AUTO:"AUTO — follow recommendation",None:"None"},names); fill("p2",n2,"None"); }
 
 /* ---------- Recommendation engine ---------- */
 function recommend(s){
@@ -391,9 +400,21 @@ function startingSettings(s){
   }else if(p==="ANUBIS"){
     o.depth= t.type==="wet" ? "3–6 dB" : "2–4 dB";
     o.low=o.mid=o.high="n/a (broadband)";
+  }else if(p==="SacredVerb" || p==="SILVER" || p==="Drum Morpher"){
+    o.depth=p==="SacredVerb"?"Wet-layer Reverb Duck; verify current state":(p==="SILVER"?"Reference matching; not generic ducking":"Instrument/capture routing; not ducking");
+    o.low=o.mid=o.high="not applicable";
+    o.attack=o.hold=o.release="not applicable";
+  }else if(p==="LookOut"){
+    o.depth="Independent Duck control; verify current state";
+    o.low=o.mid=o.high="not applicable";
+    o.attack=o.hold=o.release="Not specified";
+  }else if(["DrumKrushGlue","MARIANA","MONOLITH","NTRPL"].includes(p)){
+    o.depth="Generated-layer behavior; verify current build";
+    o.low=o.mid=o.high="not applicable";
+    o.attack=o.hold=o.release="Not verified";
   }else{
-    o.depth="Duck layer only"; o.low=o.mid=o.high="n/a";
-    o.attack=o.hold=o.release="Verify ranges";
+    o.depth="Verify module-specific behavior"; o.low=o.mid=o.high="not applicable";
+    o.attack=o.hold=o.release="Not verified";
   }
   return o;
 }
@@ -408,37 +429,56 @@ function settingsPairs(s){
     ["LOW", k?"Start here":"Off at first"],["MID", v?"Start here":(k?"Off":"Light")],["HIGH", v?"Only if needed":"Off"],
     ["DEPTH","Raise gradually"],["SPEED","By ear"],["MIX","Unverified"],
     ["Side Chain","Bus "+src.bus],["HPF / LPF","Leave default"]];
+  if(p==="SacredVerb") return [
+    ["Reverb","Native reverb; external key is optional"],["Reverb Duck","Wet layer only; verify current state"],
+    ["Side Chain",s.goal==="wet"?"Only for intentional wet-layer duck":"Not required for ordinary reverb"]];
+  if(p==="SILVER") return [["Input","Dedicated reference only"],["Processing","Reference matching; not generic ducking"]];
+  if(p==="Drum Morpher") return [["Input","External audio capture / instrument routing"],["Processing","Not ordinary ducking; keep MIDI pad control independent"]];
   if(p==="ANUBIS") return [
     ["DUCK", gate?"Off*":"On*"],["KEY", gate?"On*":"Off*"],["RANGE","By ear"],["THRESHOLD","By ear"],["RATIO","By ear"],
     ["ATTACK","ms (source); by ear"],["HOLD","ms (source); by ear"],["RELEASE","ms (source); by ear"],["Side Chain","Bus "+src.bus],["LISTEN","Check the key"]];
   return [["Controls","Verify the current plugin documentation before changing parameters"],["Host route","Verify the installed build exposes the required input"],["Bus","Use Bus "+src.bus+" only after confirming the module supports this topology"]];
+}
+function moduleInputKind(name, goal){
+  const module=DIHRoutingRegistry.modules.find(item=>item.name===name);
+  if(!module) return null;
+  if(module.key==="reference-input"||module.externalSidechain==="reference-only") return "reference";
+  if(module.key==="not-a-duck-control") return "capture";
+  if(name==="SacredVerb"&&goal!=="wet") return null;
+  return "detector";
 }
 /* ---------- Validation ---------- */
 function validate(s, rec){
   const out=[], src=SOURCES[s.src], t=TARGETS[s.tgt];
   const ok=(m)=>out.push(["ok",m]), warn=(m)=>out.push(["warn",m]), bad=(m)=>out.push(["bad",m]);
   const procs=[s.p1,s.p2].filter(p=>p&&p!=="None");
+  const inputKinds=[...new Set(procs.map(p=>moduleInputKind(p,s.goal)).filter(Boolean))];
   if(s.p1===s.p2 && s.p1!=="None") warn("Primary and secondary are the same processor.");
   if(s.src===s.tgt) bad("Trigger and target are the same signal (feedback).");
-  warn("Key Bus "+src.bus+" may use No Output ONLY if the current Logic AU still receives the detector. Verify by meter and key/no-key test.");
+  if(inputKinds.includes("detector")) warn("Key Bus "+src.bus+" may use No Output ONLY if the current Logic AU still receives the detector. Verify by meter and key/no-key test.");
   ok("Dry "+src.name+" keeps its normal audible route to its own group.");
   if(t.type==="wet") warn("Wet return requires a SECOND send to a SEPARATE audible reverb/delay auxiliary, effect at 100% wet BEFORE the ducking insert, and output to the mix. Bypass the ducker and confirm audible effect before testing ducking.");
   if(s.mode==="t2r" && t.type!=="wet") warn("Track-to-Return mode is chosen but the target is a bus, not a return.");
   if(s.mode==="t2b" && t.type==="wet") warn("Track-to-Bus mode is chosen but the target is a wet return. Consider Track-to-Return.");
   if(s.mode==="multi") warn("Multi-source: use one key bus per trigger and never sum a return into its own key.");
+  if(inputKinds.includes("reference")&&s.src!=="reference") bad("SILVER needs a dedicated reference source, not a generic detector trigger.");
+  if(inputKinds.includes("capture")) warn("Route the selected source to Drum Morpher's external-audio capture input; this is not a ducking detector.");
   procs.forEach(p=>{
     const P=PROCS[p];
     if(!P.verified) warn(p+": native sidechain/key behavior not yet verified. Confirm in the current AU/VST3 build before publishing.");
     if(P.scope==="layer" && s.goal!=="layer") warn(p+" ducks only its generated layer, which does not match the chosen goal.");
     if(P.scope==="band" && s.goal==="duck") warn("TEHUTI is spectral; the goal is broadband ducking. ANUBIS may fit better.");
-    if(P.scope==="full" && s.goal==="spectral") warn("ANUBIS is broadband; the goal is spectral separation. TEHUTI may fit better.");
+    if(p==="ANUBIS" && s.goal==="spectral") warn("ANUBIS is broadband; the goal is spectral separation. TEHUTI may fit better.");
   });
   if(s.goal==="gate" && !procs.includes("ANUBIS")) bad("External gate needs ANUBIS (KEY on, DUCK off).");
   if(s.goal==="wet" && t.type!=="wet") warn("Wet-return duck chosen but the target is not a return.");
-  if(s.goal==="layer" && !procs.some(p=>PROCS[p].scope==="layer")) bad("Layer-only goal needs MARIANA, MONOLITH or NTRPL.");
+  if(s.goal==="layer" && !procs.some(p=>PROCS[p].scope==="layer")) bad("Generated-layer goal needs DrumKrushGlue, MARIANA, MONOLITH or NTRPL.");
   if(src.kind==="kick" && s.p1==="TEHUTI") ok("Kick key: select the Low band first.");
   if(src.kind==="kick") out.push(["warn","If the kick comes from Drum Morpher, print an isolated kick or use a dedicated kick output; snare and hats must not trigger this route."]);
-  if(procs.some(p=>p==="ANUBIS"||p==="TEHUTI")) warn("ANUBIS KEY/DUCK semantics and millisecond timing units are confirmed in native source. Parameter ranges and values on the plugin face still need checking against the manual and the installed build.");warn("Choosing Side Chain: None may not disconnect a key on plugin builds made before 20 Nov 2026 (shared AU wrapper). To prove a no-key state, remove the send or bypass the plugin.");warn("On a mono track, older ANUBIS, DrumKrushGlue, MARIANA and MONOLITH builds mishandled the key (right-output leak or half strength). Check with the installed build.");
+  if(procs.includes("ANUBIS")) warn("ANUBIS KEY and DUCK are independent; millisecond timing units are source-confirmed, but plugin-face ranges and values still need checking against the manual and installed build.");
+  if(procs.includes("TEHUTI")) warn("TEHUTI is spectral/key-responsive; do not inherit ANUBIS control names, timing, or detector behavior.");
+  if(inputKinds.includes("detector")) warn("Choosing Side Chain: None may not disconnect a key on plugin builds made before 20 Nov 2026 (shared AU wrapper). To prove a no-key state, remove the send or bypass the plugin.");
+  if(procs.some(p=>["ANUBIS","DrumKrushGlue","MARIANA","MONOLITH"].includes(p))) warn("On mono tracks, older ANUBIS, DrumKrushGlue, MARIANA and MONOLITH builds mishandled the key (right-output leak or half strength). Check with the installed build.");
   if(s.daw==="other") warn("Menu names and key-bus selection vary by host. Confirm sidechain support in that host and format.");
   if(!out.some(x=>x[0]==="bad")) warn("Static routing review only: no live detector, return audibility, feedback, or plugin support has been verified.");
   return out;
@@ -447,20 +487,49 @@ function validate(s, rec){
 /* ---------- Setup steps ---------- */
 function steps(s, rec){
   const src=SOURCES[s.src], t=TARGETS[s.tgt], list=[];
-  const p=s.p1;
+  const p=s.p1, module=DIHRoutingRegistry.byName[p];
   const logic = s.daw==="logic";
   list.push(`Route ${src.name} to its normal group so it stays audible.`);
-  list.push(logic
-    ? `Create a ${logic&&"post-fader"} send from ${src.name} to Bus ${src.bus} (${src.key}). Set the detector auxiliary to No Output only if the plugin still receives the key in Logic.`
-    : `Create a send/aux from ${src.name} for the detector. Mute its output so only the key is used.`);
+  if(p==="Drum Morpher"){
+    list.push(`Route the intended external audio feed to Drum Morpher's capture input; verify the installed instrument input and keep MIDI pad routing independent.`);
+  }else if(p==="SILVER"){
+    list.push(`Provide a dedicated reference signal on the host-supported reference input (Bus ${src.bus}); keep reference audio out of the audible program path.`);
+  }else if(p==="SacredVerb"&&s.goal!=="wet"){
+    list.push("No external key is required for ordinary SacredVerb reverb. Use Reverb Duck only when intentionally ducking the generated wet layer.");
+  }else if(module.externalSidechain===true&&module.verification==="source-and-host"){
+    list.push(logic
+      ? `Create a post-fader send from ${src.name} to Bus ${src.bus} (${src.key}). Set the detector auxiliary to No Output only if the plugin still receives the key in Logic.`
+      : `Create a send/aux from ${src.name} for the detector. Mute its output so only the key is used.`);
+  }else if(moduleInputKind(p,s.goal)==="detector"){
+    list.push(`${p}'s external detector behavior is unverified. First test the installed build; only then route a separate detector feed, keeping its audible path independent.`);
+  }else{
+    list.push(`${p} uses a module-specific input path. Verify that path in the installed build; do not assume generic ducking behavior.`);
+  }
   if(t.type==="wet") list.push(`Create a SEPARATE audible send from the effect source to a dedicated ${t.name} bus (NOT Bus ${src.bus}). On its aux insert the reverb/delay at 100% wet, route the aux to the audible mix, and confirm a wet tail with the ducker bypassed.`);
-  list.push(`Insert ${p} on the ${t.name}${t.type==="wet"?" AFTER the reverb/delay, on the audible wet return":""}.`);
-  list.push(logic
-    ? `In ${p}'s Side Chain menu, select Bus ${src.bus}. ${p==="ANUBIS"?(s.goal==="gate"?"Per the Atlas, enable KEY and disable DUCK for gate mode (verify in the manual).":"Per the Atlas, turn DUCK on with KEY off for duck-only (verify in the manual)."):"Enable the key input if the plugin has one."}`
-    : `In ${p}'s sidechain input, select ${src.key}.`);
-  if(p==="TEHUTI") list.push(src.kind==="kick" ? "Choose the Low band first, then raise Depth and Speed gradually. Check per-band GR." : "Choose Mid first, add High only if needed, leave Low untouched. Check per-band GR.");
-  if(p==="ANUBIS") list.push(s.goal==="gate" ? "Set THRESHOLD so the trigger opens the gate." : "Tune RANGE, THRESHOLD and the timing controls by ear while listening to recovery between phrases. Timing units are not shown, so do not quote ms.");
-  if(PROCS[p].scope==="layer") list.push("Enable KEY and adjust the duck amount and recovery. Watch the source and layer meters.");
+  if(p==="SacredVerb"&&s.goal!=="wet") list.push(`Place SacredVerb on the ${t.name} for native reverb; no external key is required.`);
+  else if(p==="SILVER") list.push("Use SILVER for reference-based matching; keep the analysis reference separate from the audible program.");
+  else if(p==="Drum Morpher") list.push("Use Drum Morpher's capture/instrument path; keep external audio capture independent from MIDI pad routing.");
+  else list.push(`Place ${p} on the ${t.name}${t.type==="wet"?" audible wet return":""}; keep the program and detector/reference paths separate.`);
+  if(p==="ANUBIS"){
+    list.push(`Select Bus ${src.bus} as the external detector only when supported by the installed build. KEY and DUCK are independent; configure the intended gate/duck function without assuming one enables the other.`);
+  }else if(p==="TEHUTI"){
+    list.push(`Select the external key only after confirming the installed build receives it. TEHUTI is spectral; do not inherit ANUBIS controls or detector behavior.`);
+    list.push(src.kind==="kick" ? "Choose the Low band first, then tune Depth and Speed by ear; verify its own key response." : "Start with Mid, add High only if needed, leave Low untouched unless required; verify TEHUTI's own key response.");
+  }else if(p==="SacredVerb"){
+    list.push("SacredVerb generates reverb natively. Ordinary reverb does not require an external key; its Reverb Duck affects the wet layer only. Use Side Chain only when intentionally ducking that layer and verify the installed host input.");
+  }else if(p==="LookOut"){
+    list.push(`KEY and DUCK are independently supported; test KEY only, DUCK only, and both. Select Bus ${src.bus} only after confirming the host input.`);
+  }else if(p==="SILVER"){
+    list.push("Use reference matching only; the reference is analysis input, not a generic ducking detector or audible track.");
+  }else if(p==="Drum Morpher"){
+    list.push("This is capture/instrument routing, not ducking. Verify capture and monitoring separately from MIDI pad operation.");
+  }else if(p==="NTRPL"){
+    list.push("Preserve rewrite/alternate-output routing and any intentional dry duplicate. Detector behavior remains unverified until a layer-only, key-versus-no-key test proves it.");
+  }else if(module.role==="layer"){
+    list.push("This module is layer-specific. Treat its native key/control mapping as unverified until checked against the installed build; do not infer parameter names or values.");
+  }else{
+    list.push("Verify this module's native input and control mapping before generating parameter instructions.");
+  }
   if(s.p2!=="None") list.push(`Optional second stage: ${s.p2}. Compare each alone, both active, and serial. Avoid unnecessary cumulative gain reduction.`);
   list.push("Verify: the target is audible with the ducker bypassed; the key reaches the detector; the key aux is not audible; the wet return (if used) remains audible; the target recovers in gaps; compare at matched loudness.");
   return list;
@@ -478,8 +547,10 @@ function arrow(x1,y1,x2,y2,color,dash){
 function renderMap(s){
   const src=SOURCES[s.src], t=TARGETS[s.tgt];
   const procs=[s.p1,s.p2].filter(p=>p&&p!=="None");
+  const inputKinds=[...new Set(procs.map(p=>moduleInputKind(p,s.goal)).filter(Boolean))];
+  const inputLabel=inputKinds.length?inputKinds.join(" and "):"no external input";
   const W=900,H=330;
-  let g=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Routing map: ${src.name} key to ${procs.join(" and ")} on ${t.name}">
+  let g=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Routing map: ${src.name} ${inputLabel} to ${procs.join(" and ")} on ${t.name}">
   <defs>
    <marker id="a-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#e0b45a"/></marker>
    <marker id="a-k" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#b983ff"/></marker></defs>
@@ -495,34 +566,55 @@ function renderMap(s){
   const ox=700;
   g+=arrow(lastEnd,y1+h/2,ox,y1+h/2,'#e0b45a');
   g+=node(ox,y1,180,h,"Mix / family bus","Audible output",'#5fd3e0',"mixer");
-  // detector lane
-  g+=`<text x="20" y="216" fill="#9a9484" font-size="11" letter-spacing="2">DETECTOR ONLY</text>`;
-  const y2=232;
-  g+=node(20,y2,190,h-6,src.name,"Source / trigger",'#b983ff',src.kind==="voice"?"microphone":"kick");
-  g+=arrow(210,y2+(h-6)/2,300,y2+(h-6)/2,'#b983ff',true);
-  g+=node(300,y2,210,h-6,`Bus ${src.bus} · ${src.key}`,"Detector only · verify key",'#b983ff',"bus");
-  const kx=300+105;
-  // key feeds each processor input from below
-  g+=`<path d="M${kx} ${y2} L${kx} ${y1+h+22} L${300+pw/2} ${y1+h+22} L${300+pw/2} ${y1+h+3}" stroke="#b983ff" stroke-width="2.4" fill="none" stroke-dasharray="7 5" marker-end="url(#a-k)"/>`;
-  g+=`<text x="${kx+10}" y="${y1+h+40}" fill="#b983ff" font-size="11">Detector input</text>`;
-  if(procs.length>1){ const sx=300+pw+40+pw/2; g+=`<path d="M${300+pw/2} ${y1+h+22} L${sx} ${y1+h+22} L${sx} ${y1+h+3}" stroke="#b983ff" stroke-width="2.4" fill="none" stroke-dasharray="7 5" marker-end="url(#a-k)"/>`; }
-  g+=`<text x="560" y="${y2+20}" fill="#b983ff" font-size="12" font-weight="700">DETECTOR ONLY</text>
-      <text x="560" y="${y2+38}" fill="#9a9484" font-size="11">Key aux must be verified in Logic.</text>
-      <text x="560" y="${y2+53}" fill="#9a9484" font-size="11">${src.name} stays audible through its own group.</text>`;
+  if(inputKinds.length===0){
+    g+=`<text x="20" y="216" fill="#9a9484" font-size="11" letter-spacing="2">NO EXTERNAL INPUT REQUIRED</text>
+      <text x="20" y="256" fill="#b983ff" font-size="12" font-weight="700">Ordinary SacredVerb reverb works without a key.</text>
+      <text x="20" y="276" fill="#9a9484" font-size="11">Use an external sidechain only when intentionally ducking the wet layer.</text>`;
+  }else{
+    const y2=232, single=inputKinds.length===1, kind=single?inputKinds[0]:"separate";
+    const laneTitle={detector:"DETECTOR ONLY",reference:"REFERENCE INPUT · ANALYSIS ONLY",capture:"EXTERNAL AUDIO CAPTURE · NOT DUCKING",separate:"MODULE INPUTS · KEEP DISTINCT"}[kind];
+    const sourceTitle={detector:"Source / trigger",reference:"Reference source",capture:"External audio source",separate:"Module input sources"}[kind];
+    const busTitle=single?`Bus ${src.bus} · ${src.key}`:"Keep each module input separate";
+    const busNote={detector:"Detector only · verify key",reference:"Reference only · not audible",capture:"Capture feed · not ducking",separate:"Detector, reference and capture are not interchangeable"}[kind];
+    g+=`<text x="20" y="216" fill="#9a9484" font-size="11" letter-spacing="2">${laneTitle}</text>`;
+    g+=node(20,y2,190,h-6,src.name,sourceTitle,'#b983ff',src.kind==="voice"?"microphone":"kick");
+    g+=arrow(210,y2+(h-6)/2,300,y2+(h-6)/2,'#b983ff',true);
+    g+=node(300,y2,210,h-6,busTitle,busNote,'#b983ff',"bus");
+    if(single){
+      const kx=300+105;
+      g+=`<path d="M${kx} ${y2} L${kx} ${y1+h+22} L${300+pw/2} ${y1+h+22} L${300+pw/2} ${y1+h+3}" stroke="#b983ff" stroke-width="2.4" fill="none" stroke-dasharray="7 5" marker-end="url(#a-k)"/>`;
+      g+=`<text x="${kx+10}" y="${y1+h+40}" fill="#b983ff" font-size="11">${kind==="detector"?"Detector input":kind==="reference"?"Reference input":"Capture input"}</text>`;
+      if(procs.length>1){ const sx=300+pw+40+pw/2; g+=`<path d="M${300+pw/2} ${y1+h+22} L${sx} ${y1+h+22} L${sx} ${y1+h+3}" stroke="#b983ff" stroke-width="2.4" fill="none" stroke-dasharray="7 5" marker-end="url(#a-k)"/>`; }
+      g+=`<text x="560" y="${y2+20}" fill="#b983ff" font-size="12" font-weight="700">${laneTitle}</text>
+        <text x="560" y="${y2+38}" fill="#9a9484" font-size="11">${kind==="detector"?"Verify host detector delivery.":kind==="reference"?"Keep reference out of the audible program.":"Verify external capture independently from MIDI."}</text>
+        <text x="560" y="${y2+53}" fill="#9a9484" font-size="11">${src.name} stays audible through its own group.</text>`;
+    }else{
+      g+=`<text x="560" y="${y2+30}" fill="#b983ff" font-size="11">Configure and verify each module input independently.</text>`;
+    }
+  }
   g+="</svg>";
   $("map").innerHTML=g;
 }
 
 /* ---------- Render ---------- */
-function state(){ return {src:$("src").value,tgt:$("tgt").value,goal:$("goal").value,daw:$("daw").value,mode:$("mode").value,p1:$("p1").value,p2:$("p2").value}; }
+function canonicalModuleSelection(name){return name==="SACREDVERB"?"SacredVerb":name}
+function state(){
+  const raw={src:$("src").value,tgt:$("tgt").value,goal:$("goal").value,daw:$("daw").value,mode:$("mode").value,selectedP1:$("p1").value,selectedP2:$("p2").value};
+  const recommendation=recommend(raw);
+  return {...raw,recommendedP1:recommendation.primary,recommendedP2:recommendation.secondary,
+    p1:raw.selectedP1==="None"?"None":DIHRoutingCore.resolveModule(raw.selectedP1,recommendation.primary),
+    p2:raw.selectedP2==="None"?"None":DIHRoutingCore.resolveModule(raw.selectedP2,recommendation.secondary)};
+}
 function render(){
   const s=state(), rec=recommend(s);
   renderMap(s);
-  // recommended processors
+  const selectionNote=s.selectedP1==="AUTO"
+    ? `AUTO selected ${s.p1}. ${rec.why.join(" ")}`
+    : `Explicitly selected: ${s.p1}. This processor is retained; automatic recommendations are not applied.`;
   const card=(p,cls)=>{ if(p==="None") return ""; const P=PROCS[p];
     const im=P.shot?`<img class="shot" src="assets/plugins/${P.shot}" style="object-position:${P.pos}" alt="${p} plugin window (original screenshot, cropped by CSS)">`:"";
     return `<div class="proc ${cls}">${im}<b>${p}</b><small>${P.role}</small><span class="badge ${P.verified?"ok":""}">${P.cap}</span>${P.verified?'<span class="badge">Units/ranges unverified</span>':""}<ul>${P.bullets.map(b=>`<li>${b}</li>`).join("")}</ul></div>`; };
-  $("rec").innerHTML = `<div class="note" style="margin:0 0 8px">${rec.why.join(" ")} Recommended: <b style="color:var(--gold)">${rec.primary}</b>${rec.secondary!=="None"?` + ${rec.secondary}`:""}.</div>`
+  $("rec").innerHTML = `<div class="note" style="margin:0 0 8px">${selectionNote}</div>`
     + card(s.p1,"") + card(s.p2,"sec");
   // settings
   $("settings").innerHTML = settingsPairs(s).map(([k,v])=>`<div>${k}<b>${v}</b></div>`).join("");
@@ -534,10 +626,7 @@ function render(){
   $("steps").innerHTML = steps(s,rec).map(x=>`<li>${x}</li>`).join("");
 }
 ["src","tgt","goal","daw","mode","p1","p2"].forEach(id=>$(id).addEventListener("change",render));
-$("goal").addEventListener("change",()=>{ const r=recommend(state()); $("p1").value=r.primary; $("p2").value=r.secondary; render(); });
-$("src").addEventListener("change",()=>{ const r=recommend(state()); $("p1").value=r.primary; $("p2").value=r.secondary; render(); });
-$("tgt").addEventListener("change",()=>{ const r=recommend(state()); $("p1").value=r.primary; $("p2").value=r.secondary; render(); });
-$("gen").onclick=()=>{ const r=recommend(state()); $("p1").value=r.primary; $("p2").value=r.secondary; render(); toast("Routing plan generated"); };
+$("gen").onclick=()=>{ render(); toast("Routing plan generated"); };
 
 /* ---------- Plan text, copy, save, print ---------- */
 function planText(){
@@ -547,6 +636,7 @@ function planText(){
    `Target: ${t.name} (${GOALS[s.goal]})`,
    `Host: ${DAWS[s.daw]} · ${MODES[s.mode]}`,
    `Processors: ${s.p1}${s.p2!=="None"?" + "+s.p2:""}`,
+   `Selection: primary ${s.selectedP1==="AUTO"?"AUTO → "+s.p1:"explicit → "+s.p1}; secondary ${s.selectedP2==="AUTO"?"AUTO → "+s.p2:"explicit → "+s.p2}`,
    ``,`Steps:`,...steps(s).map((x,i)=>`${i+1}. ${x}`),
    ``,`Starting targets (audition, not factory): `+settingsPairs(s).map(([k,v])=>k+" "+v).join("; "),
    `Reduction target: ${REDUCTION[redTarget]}`,
@@ -574,20 +664,26 @@ function renderTpls(){
     loadState(t.s); toast(t.n+" loaded");
   });
 }
-function loadState(s){ for(const k in s){ $(k).value=s[k]; } render(); }
+function loadState(s){ for(const k in s){ if($(k)) $(k).value=(k==="p1"||k==="p2")?canonicalModuleSelection(s[k]):s[k]; } render(); }
 
 /* ---------- Public / paid view ---------- */
 function setView(isFree){
   free=isFree;
   $("viewFree").classList.toggle("on",free); $("viewPaid").classList.toggle("on",!free);
   ["config","recCard"].forEach(id=>$(id).classList.toggle("locked",free));
-  if(free){ loadState(TPL[0].s); }
   renderTpls();
 }
 $("viewFree").onclick=()=>setView(true); $("viewPaid").onclick=()=>setView(false);
 
 /* ---------- Init ---------- */
-try{ const sv=JSON.parse(localStorage.getItem("dih_routing")||"null"); if(sv) for(const k in sv) if($(k)) $(k).value=sv[k]; }catch(e){}
+try{
+  const sv=JSON.parse(localStorage.getItem("dih_routing")||"null");
+  if(sv){
+    for(const k of ["src","tgt","goal","daw","mode"]) if(sv[k]&&$(k)) $(k).value=sv[k];
+    if(sv.selectedP1||sv.p1) $("p1").value=canonicalModuleSelection(sv.selectedP1||sv.p1);
+    if(sv.selectedP2||sv.p2) $("p2").value=canonicalModuleSelection(sv.selectedP2||sv.p2);
+  }
+}catch(e){}
 render(); renderTpls();
 
 document.querySelectorAll(".mtabs button").forEach(b=>b.onclick=()=>{
@@ -646,18 +742,7 @@ render();
 <script>
 /* Ten-module directory: reads existing PROCS and form, does not send host/network commands. */
 (function(){
-  const tenModules=[
-    ["ANUBIS","Broadband Duck / External Gate"],
-    ["TEHUTI","Three-band Spectral Duck"],
-    ["DrumKrushGlue","Drum Pocket / Glue"],
-    ["MARIANA","Bass Foundation Layer"],
-    ["MONOLITH","Impact / Weight Layer"],
-    ["Drum Morpher","Instrument External Capture"],
-    ["SACREDVERB","Wet Reverb / Reverb Duck"],
-    ["LookOut","Transient Key / Duck"],
-    ["SILVER","Reference Level Matching"],
-    ["NTRPL","Harmonic Rewrite-Layer Duck"]
-  ];
+  const tenModules=DIHRoutingRegistry.modules.map(module=>[module.name,module.function]);
   const grid=document.getElementById("tenModuleGrid");
   if(!grid || typeof PROCS==="undefined") return;
   function draw(){

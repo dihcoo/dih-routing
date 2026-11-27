@@ -16,6 +16,25 @@
     return matches.map(module => ({ module, explanation: `${module.name}: ${module.function}.` }));
   }
 
+  function resolveModule(selectedModule, recommendedModule) {
+    const name = selectedModule == null || selectedModule === 'AUTO' ? recommendedModule : selectedModule;
+    if (!registry.modules.some(module => module.name === name)) throw new Error(`Unknown routing module: ${String(name)}`);
+    return name;
+  }
+
+  function resolveSelection({ selectedModule, recommendedModule, mode } = {}) {
+    const name = resolveModule(selectedModule, recommendedModule);
+    const moduleRecord = registry.modules.find(module => module.name === name);
+    const valid = moduleRecord.modes.includes(mode);
+    return Object.freeze({
+      module: name,
+      moduleRecord,
+      mode,
+      valid,
+      errors: valid ? [] : [`${name} is not registry-supported for routing mode ${String(mode)}. Selection retained. Supported modes: ${moduleRecord.modes.join(', ')}.`]
+    });
+  }
+
   function validateTopology(topology) {
     const errors = [], warnings = [];
     const mode = topology && topology.mode;
@@ -28,6 +47,13 @@
       if (topology && topology.collector === topology.audibleReturn) errors.push('Mode C collector and audible return must be separate.');
       if (topology && topology.collectorAudible) errors.push('Mode C collector must not be an unintended audible path.');
     }
+    if (topology && topology.module) {
+      const moduleRecord = registry.modules.find(module => module.name === topology.module);
+      if (!moduleRecord) errors.push(`Unknown routing module: ${String(topology.module)}`);
+      else if (['A', 'B', 'C'].includes(mode) && !moduleRecord.modes.includes(mode)) {
+        errors.push(`${moduleRecord.name} is not registry-supported for routing mode ${mode}. Selected module is retained; supported modes: ${moduleRecord.modes.join(', ')}.`);
+      }
+    }
     if (topology && topology.module === 'NTRPL') {
       warnings.push('NTRPL requires a layer-only/key-versus-no-key bounce on the installed build before its detector or duck behavior is treated as proven.');
       if (topology.parallelDry && !topology.separateDryDuplicate) warnings.push('NTRPL parallel dry requires an explicit separate dry duplicate; do not double-sum the source.');
@@ -36,7 +62,7 @@
     return { errors, warnings, valid: errors.length === 0 };
   }
 
-  const api = Object.freeze({ goalLabels, recommend, validateTopology });
+  const api = Object.freeze({ goalLabels, recommend, resolveModule, resolveSelection, validateTopology });
   root.DIHRoutingCore = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 }(typeof window !== 'undefined' ? window : globalThis));

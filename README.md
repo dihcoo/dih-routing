@@ -21,5 +21,5 @@ Use the companion Logic templates and the repeatable protocol in [TEST_PROTOCOL.
 ## Test
 
 ```sh
-node tests/routing-core.test.js
+node --test tests/*.test.js
 ```
