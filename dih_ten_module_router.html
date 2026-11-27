@@ -198,6 +198,8 @@ details summary{cursor:pointer;color:#edc67e}
 <label>Import JSON<input type="file" id="import" accept=".json,application/json"></label>
 </section>
 
+<script src="routing-registry.js"></script>
+<script src="routing-core.js"></script>
 <script>
 'use strict';
 const FORMAT='DIH-ten-module-routing-v5';
@@ -207,7 +209,7 @@ const WORKFLOWS=['chain','anubisonly','standard','wet','delay','altcollector','c
 const BUS_ROLES=[['vocal','Narration / vocal key (detector)','detector',32],['kick','Kick detector','detector',33],['music','Music target','target',12],['drums','Drum target','target',14],['bass','Bass target','target',15],['impact','Impact target','target',16],['fx','FX target','target',9],['master','Master target','target',10],['capture','Capture feed','detector',34],['reference','Reference key','detector',35],['reverb','Audible reverb return','return',36],['delay','Audible delay return','return',37],['collector','Alternate collector bus','collector',38],['altdest','Alternate destination bus','return',39]];
 const KIND=Object.fromEntries(BUS_ROLES.map(([id,,k])=>[id,k]));
 const OPTIONAL_ROLES=['reverb','delay','collector','altdest'];
-const PLUGINS=[
+const LEGACY_PLUGINS=[
 {name:'ANUBIS',purpose:'Broadband music/return duck',target:'music',source:'vocal',type:'duck',on:true},
 {name:'TEHUTI',purpose:'Three-band spectral duck',target:'music',source:'vocal',type:'spectral',on:true},
 {name:'DrumKrushGlue',purpose:'Drum pocket / glue',target:'drums',source:'kick',type:'duck',on:false},
@@ -219,6 +221,7 @@ const PLUGINS=[
 {name:'SILVER',purpose:'Reference level matching',target:'master',source:'reference',type:'reference',on:false},
 {name:'NTRPL',purpose:'Rewrite-layer duck',target:'music',source:'vocal',type:'rewrite',on:false}
 ];
+const PLUGINS=DIHRoutingRegistry.modules.map(module=>({name:module.name,purpose:module.function,target:module.defaultTarget,source:module.defaultSource,type:module.role,on:module.name==='ANUBIS'||module.name==='TEHUTI'}));
 const HELP={
 'ANUBIS':{behavior:'Broadband duck / external gate. KEY drives gate detection; DUCK drives external duck reduction; DUCK works with KEY off when a key is present. Attack, Hold and Release are milliseconds.',distinct:'KEY and DUCK are independent. Preset TEHUTI DUCK GUARD [Stereo] = KEY off, DUCK on.',status:[['src','source: KEY/DUCK semantics, ms units, preset values'],['host','Logic 12.2: owner-order TEHUTI → ANUBIS Bus 32 chain measured; ANUBIS alone was −4.65 dB active / 0.00 dB gaps'],['host','Logic 12.2 Mode C (21 Nov 2026): Side Chain = dry source, DUCK on, Range −19.8 ducked a SacredVerb wet return −19.8 to −20.3 dB with recovery to about 0 dB; settings persisted after save and reopen'],['pend','listen/evaluate alternate presets and mono/stereo beyond this one bounce']]},
 'TEHUTI':{behavior:'Three-band spectral duck. Crossovers at 161.8 Hz and 1618 Hz (PHI x 100, PHI x 1000). No Attack/Hold/Release controls; DEPTH and SPEED shape the reduction.',distinct:'Placed before ANUBIS in the coordinated chain. Its key response is measured on its own; never infer it from ANUBIS gain reduction.',status:[['src','source: bands, crossovers, controls'],['host','Logic 12.2: Bus 32 result was −0.71 dB active / −0.02 dB gaps; owner-order chain also measured'],['pend','Side Chain None gap offset (≈−1.1 dB, 20 Nov bounces) predates the key-path DC blocker added to the source on 21 Nov and installed 21 Nov 23:00; the None re-test with that build is pending, so do not use None as a neutral baseline until it passes'],['pend','independent review 22 Nov (Proving Ground flowchart, 0.25 s windows): older music-mix bounces show a fixed gain of about +2.7 dB over bypass (build and date unknown); unity of the current build is untested']]},
@@ -257,6 +260,9 @@ function applyWorkflow(c,w){c.workflow=w;const pl=n=>c.plugins.find(p=>p.name===
  return c}
 function validate(c){
  const errors=[],warnings=[],hostChecks=[],info=[];
+ const sharedMode=c.workflow==='altcollector'?'C':(['wet','delay'].includes(c.workflow)?'B':'A');
+ const shared=DIHRoutingCore.validateTopology({mode:sharedMode,collector:c.workflow==='altcollector'?c.buses.collector:null,audibleReturn:c.workflow==='altcollector'?c.buses.altdest:(c.workflow==='wet'?c.buses.reverb:(c.workflow==='delay'?c.buses.delay:null)),collectorAudible:c.workflow==='altcollector'&&c.alt.collOut==='audible'});
+ errors.push(...shared.errors);warnings.push(...shared.warnings);
  for(const [role,num] of Object.entries(c.buses))if(!Number.isInteger(num)||num<1||num>256)errors.push('Invalid bus number for '+role);
  const alt=c.workflow==='altcollector';
  const used=Object.entries(c.buses).filter(([r])=>!OPTIONAL_ROLES.includes(r)||(r==='reverb'&&c.workflow==='wet')||(r==='delay'&&c.workflow==='delay')||((r==='collector'||r==='altdest')&&alt));

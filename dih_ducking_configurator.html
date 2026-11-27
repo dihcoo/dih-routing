@@ -232,10 +232,12 @@ svg{background:radial-gradient(500px 200px at 50% 40%,#1a1409,#0a0908)}
 <p class="dcg-note">Source-verified notes are labeled; other products require their current native engine/parameter audit. This is a planning guide, not a Logic API, a DSP contract, or an automatic parameter writer. Bus numbers must be chosen and verified in the host. <a href="https://dihworldaudio.com/manuals/" target="_blank" rel="noopener noreferrer">Official DIH manuals</a> · <a href="dih_ten_module_router.html">Unified ten-module router</a>.</p>
 </section>
 
+<script src="routing-registry.js"></script>
+<script src="routing-core.js"></script>
 <script id="dihCapabilityScript">
 (function(){
 'use strict';
-const MODELS=[{"id": "ANUBIS", "family": "Dynamics / guard", "purpose": "Broadband ducking / gating", "key": "Check native definition", "duck": "Broadband target (per build)", "external": "External detector as configured in host", "modes": ["A", "B"], "confidence": "Routing evidence; native dependency map pending", "guide": "Use as a dedicated broad ducking lane. Keep key source independent of audible program."}, {"id": "TEHUTI", "family": "Harmonics / pitch", "purpose": "Spectral/key-responsive processing", "key": "Check native definition", "duck": "Spectral shaping; verify native target", "external": "Host external-key path where supported", "modes": ["A", "B"], "confidence": "Routing evidence; native dependency map pending", "guide": "Use TEHUTI as a separate spectral stage. Do not assume ANUBIS controls or detector law."}, {"id": "DrumKrushGlue", "family": "Drum / instrument", "purpose": "Drum pocket, dynamics and glue", "key": "Build-specific control; verify", "duck": "May affect generated/glue layer; verify source", "external": "Optional keyed drum interaction", "modes": ["A", "B"], "confidence": "Logic bounces + later self-key correction; current code pending", "guide": "Standard drum processing does not automatically require external KEY; guard against duplicate dry routing."}, {"id": "MARIANA", "family": "Bass / low end", "purpose": "Bass foundation and sub-pressure", "key": "Build-specific control; verify", "duck": "Bass-layer response; verify exact location", "external": "Optional detector on corrected build", "modes": ["A", "B"], "confidence": "Logic bounces + 2026-11-24 self-key correction; current code pending", "guide": "The Side Chain: None state must not self-key on the corrected build."}, {"id": "MONOLITH", "family": "Bass / low end", "purpose": "Impact and weight-layer processing", "key": "Build-specific control; verify", "duck": "Weight-layer response; verify exact location", "external": "Optional detector on corrected build", "modes": ["A", "B"], "confidence": "Logic bounces + 2026-11-24 self-key correction; current code pending", "guide": "Audible signal and detector are separate. Do not classify as a full-mix broadband ducker."}, {"id": "Drum Morpher", "family": "Drum / instrument", "purpose": "Instrument and external-audio capture/morph", "key": "Not a universal duck toggle", "duck": "Not a generic duck workflow", "external": "Capture/monitor input according to current AU", "modes": ["C"], "confidence": "Engine/source review; per-build host routing to confirm", "guide": "Use MIDI/MPC performance and external-audio capture configuration rather than a generic ducking return."}, {"id": "SACREDVERB", "family": "Vocal / spatial FX", "purpose": "Vocal chamber, reverb, harmonic and spatial FX; music FX", "key": "Optional sidechain enable (SidechainEnable)", "duck": "SidechainDuck attenuates WET reverb/Solfeggio layer", "external": "Requires host-supplied sidechain channels when enabled", "modes": ["B", "C"], "confidence": "Native SacredVerbEngine.cpp inspected", "guide": "Vocal-first creative spatial effect; standard inserts or wet return DO NOT require sidechain. If keyed, duck only the wet effects layer."}, {"id": "LookOut", "family": "Dynamics / transient", "purpose": "Transient shaping, independent KEY and DUCK", "key": "KEY selects detector interpretation/input", "duck": "Independent sidechain-driven reduction; no KEY ON requirement", "external": "Available host sidechain; behavior separate from KEY", "modes": ["A", "B"], "confidence": "LookOutEngine.cpp source findings previously reviewed", "guide": "DUCK and KEY can be configured independently. Never require KEY just to expose DUCK."}, {"id": "SILVER", "family": "Vocal / mic / source", "purpose": "Source/reference level matching and polish", "key": "Reference input, not generic KEY preset", "duck": "Not classified as generic broadband duck", "external": "Reference audio for level matching where supported", "modes": ["A"], "confidence": "Logic reference tests; exact native mapping pending", "guide": "Reference signal remains analysis-only; never sum reference audio into output. November 20 Ref ON C was INVALID."}, {"id": "NTRPL", "family": "Bass / harmonic rewrite", "purpose": "FX/Bass reconstruction and alternate signal", "key": "KEY UI maps to SidechainEnable; enables installed detector", "duck": "Attenuation affects generated MAIN rewrite path where detector active", "external": "Host external-key channels; installed detector frequency-weighted", "modes": ["A", "B", "C"], "confidence": "Installed-version NtrplEngine.cpp and NtrplParameters.h inspected", "guide": "At 100% Mix MAIN selects processed alternate path with computed key gain; ALT is separate. Preserve 3–6–9 bass, 3–5–7 vocal intent. Endpoint and musical quality remain distinct verification gates."}];
+const MODELS=DIHRoutingRegistry.modules.map(module=>({id:module.name,family:module.function,purpose:module.function,key:module.key,duck:module.duck,external:module.externalSidechain===true?'External host input when the installed build exposes it':module.externalSidechain==='reference-only'?'Reference input only':'Verify current native/host support',modes:module.modes,confidence:module.verification,guide:module.caution}));
 const target=document.getElementById('dihCapabilityGuide');if(!target)return;
 const q=id=>target.querySelector('#'+id);
 const sel=q('dcgPlugin'),use=q('dcgUse'),mode=q('dcgMode'),key=q('dcgKey'),sc=q('dcgSc'),out=q('dcgResult'),cards=q('dcgCards');
@@ -317,7 +319,10 @@ const GOALS = {
   spectral:"Spectral separation",
   wet:     "Wet-return duck",
   gate:    "External gate (trigger opens)",
-  layer:   "Layer-only duck (generated layer)"
+  layer:   "Layer-only duck (generated layer)",
+  reference:"Reference matching",
+  capture: "Instrument / capture routing",
+  rewrite: "Rewrite / alternate processing"
 };
 const DAWS = {logic:"Logic Pro", other:"Other host (AU / VST3)"};
 const MODES = {t2b:"Track-to-Bus", t2r:"Track-to-Return", b2b:"Bus-to-Bus", multi:"Multi-source (hybrid)"};
@@ -354,7 +359,7 @@ let free=false, redTarget="mid";
 
 fill("src",SOURCES,"kick"); fill("tgt",TARGETS,"bass"); fill("goal",GOALS,"spectral");
 fill("daw",DAWS,"logic"); fill("mode",MODES,"t2b");
-{ const names={}; ["ANUBIS","TEHUTI","DrumKrushGlue","MARIANA","MONOLITH","Drum Morpher","SACREDVERB","LookOut","SILVER","NTRPL"].forEach(n=>names[n]=n);
+{ const names={}; DIHRoutingRegistry.modules.forEach(module=>{const name=module.name==='SacredVerb'?'SACREDVERB':module.name;names[name]=name;});
   fill("p1",names,"TEHUTI"); const n2=Object.assign({None:"None"},names); fill("p2",n2,"None"); }
 
 /* ---------- Recommendation engine ---------- */
@@ -367,6 +372,9 @@ function recommend(s){
     case "wet":      primary = "ANUBIS"; secondary = "None"; why.push("Duck the wet return after the reverb/delay, wet-only."); break;
     case "gate":     primary = "ANUBIS"; why.push("ANUBIS has a separate external-gate mode (KEY on, DUCK off)."); break;
     case "layer":    primary = src.kind==="kick" ? "MARIANA" : "NTRPL"; secondary = src.kind==="kick" ? "MONOLITH" : "None"; why.push("Layer-specific processors duck only their added layer."); break;
+    case "reference": primary = "SILVER"; why.push("Reference matching is distinct from sidechain ducking and keeps the reference out of the audible program path."); break;
+    case "capture": primary = "Drum Morpher"; why.push("Instrument and capture routing is not a generic ducker setup."); break;
+    case "rewrite": primary = "NTRPL"; why.push("Rewrite and alternate-output processing uses its dedicated bus topology."); break;
   }
   if(s.goal==="spectral" && t.type==="wet"){ secondary="ANUBIS"; }
   return {primary, secondary, why};
@@ -403,7 +411,7 @@ function settingsPairs(s){
   if(p==="ANUBIS") return [
     ["DUCK", gate?"Off*":"On*"],["KEY", gate?"On*":"Off*"],["RANGE","By ear"],["THRESHOLD","By ear"],["RATIO","By ear"],
     ["ATTACK","ms (source); by ear"],["HOLD","ms (source); by ear"],["RELEASE","ms (source); by ear"],["Side Chain","Bus "+src.bus],["LISTEN","Check the key"]];
-  return [["KEY","Unverified"],["Side Chain","Bus "+src.bus],["Duck amount","By ear"],["Recovery","By ear"]];
+  return [["Controls","Verify the current plugin documentation before changing parameters"],["Host route","Verify the installed build exposes the required input"],["Bus","Use Bus "+src.bus+" only after confirming the module supports this topology"]];
 }
 /* ---------- Validation ---------- */
 function validate(s, rec){
